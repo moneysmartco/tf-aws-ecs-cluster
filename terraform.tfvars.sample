@@ -8,10 +8,7 @@ project_name = "api"
 # VPC
 #--------------------------------------------------
 vpc_id             = "vpc-xxx"
-vpc_cidr           = "192.168.0.0/16"
-azs                = "ap-southeast-1a,ap-southeast-1b"
 private_subnet_ids = "subnet-xxx,subnet-xxx"
-nat_gateway_azs    = "ap-southeast-1a"
 
 #--------------------------------------------------
 # Bastion

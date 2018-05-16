@@ -9,16 +9,7 @@ variable "project_name" {
 variable "vpc_id" {
   default = "vpc-xxx"
 }
-variable "vpc_cidr" {
-  default = "x.x.x.x/16"
-}
-variable "azs" {
-  default = "ap-southeast-1a,ap-southeast-1b"
-}
 variable "private_subnet_ids" {
-  default = "x-xxx"
-}
-variable "nat_gateway_azs" {
   default = "x-xxx"
 }
 ## Bastion
