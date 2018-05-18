@@ -17,8 +17,8 @@ variable "bastion_sg_id" {
   default = "sg-xxx"
 }
 ## ALB
-variable "alb_sg_id" {
-  default = "sg-xxx"
+variable "alb_sg_ids" {
+  default = ["sg-xxx"]
 }
 ## EC2
 variable "deploy_key_name" {

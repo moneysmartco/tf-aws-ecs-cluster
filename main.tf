@@ -11,12 +11,6 @@ resource "aws_security_group" "app_sg" {
     protocol        = "tcp"
     security_groups = ["${var.bastion_sg_id}"]
   }
-  ingress {
-    from_port       = 32768
-    to_port         = 65535
-    protocol        = "tcp"
-    security_groups = ["${var.alb_sg_id}"]
-  }
   egress {
     from_port   = 0
     to_port     = 0
@@ -26,6 +20,16 @@ resource "aws_security_group" "app_sg" {
   tags {
     Name = "${var.project_name}-${var.env}-sg"
   }
+}
+
+resource "aws_security_group_rule" "alb_to_instances" {
+  count                    = "${length(var.alb_sg_ids)}"
+  type                     = "ingress"
+  protocol                 = "tcp"
+  from_port                = 32768
+  to_port                  = 65535
+  source_security_group_id = "${element(var.alb_sg_ids, count.index)}"
+  security_group_id        = "${aws_security_group.app_sg.id}"
 }
 
 #------------------------------
