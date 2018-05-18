@@ -20,6 +20,9 @@ resource "aws_security_group" "app_sg" {
   tags {
     Name = "${var.project_name}-${var.env}-sg"
   }
+  lifecycle {
+    ignore_changes = ["ingress"]
+  }
 }
 
 resource "aws_security_group_rule" "alb_to_instances" {
