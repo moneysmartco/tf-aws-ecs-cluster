@@ -129,6 +129,10 @@ resource "aws_autoscaling_group" "ecs_asg" {
     key                 = "Type"
     value               = "ec2"
     propagate_at_launch = true
+  }, {
+    key                 = "datadog-enabled"
+    value               = "true"
+    propagate_at_launch = true
   }]
 }
 
