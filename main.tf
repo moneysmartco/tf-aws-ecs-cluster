@@ -141,7 +141,7 @@ resource "aws_autoscaling_policy" "asg_scale_out" {
   name                    = "${var.project_name}-${var.env}-scale_out-policy"
   scaling_adjustment      = 1
   adjustment_type         = "ChangeInCapacity"
-  cooldown                = 300
+  cooldown                = "${var.asg_scale_out_cooldown}"
   autoscaling_group_name  = "${aws_autoscaling_group.ecs_asg.name}"
 }
 
@@ -169,7 +169,7 @@ resource "aws_autoscaling_policy" "asg_scale_in" {
   name                    = "${var.project_name}-${var.env}-scale_in-policy"
   scaling_adjustment      = -1
   adjustment_type         = "ChangeInCapacity"
-  cooldown                = 300
+  cooldown                = "${var.asg_scale_in_cooldown}"
   autoscaling_group_name  = "${aws_autoscaling_group.ecs_asg.name}"
 }
 

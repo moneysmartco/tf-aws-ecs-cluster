@@ -18,11 +18,11 @@ bastion_sg_id = "sg-xxx"
 #--------------------------------------------------
 # EC2
 #--------------------------------------------------
-ec2_type        = "m4.large"
-root_ebs_size   = 50
-root_ebs_type   = "gp2"
-deploy_key_name = "msmart-ops"
-iam_instance_profile = "ecsInstanceRole"
+ec2_type              = "m4.large"
+root_ebs_size         = 50
+root_ebs_type         = "gp2"
+deploy_key_name       = "msmart-ops"
+iam_instance_profile  = "ecsInstanceRole"
 
 #--------------------------------------------------
 # ALB
@@ -32,13 +32,15 @@ alb_sg_ids = ["sg-xxx"]
 #--------------------------------------------------
 # ASG
 #--------------------------------------------------
-asg_desired_capacity = 1
-asg_min_size = 1
-asg_max_size = 5
+asg_desired_capacity  = 1
+asg_min_size          = 1
+asg_max_size          = 5
 
-enable_asg_scaling_policy = false
-asg_cpu_alarm_period = 60
-asg_cpu_alarm_scale_out_threshold = 60
-asg_cpu_alarm_scale_out_evaulation_periods = 1
-asg_cpu_alarm_scale_in_threshold = 10
-asg_cpu_alarm_scale_in_evaulation_periods = 10
+enable_asg_scaling_policy                   = false
+asg_cpu_alarm_period                        = 60
+asg_cpu_alarm_scale_out_threshold           = 60
+asg_cpu_alarm_scale_out_evaulation_periods  = 1
+asg_scale_out_cooldown                      = 180
+asg_cpu_alarm_scale_in_threshold            = 10
+asg_cpu_alarm_scale_in_evaulation_periods   = 10
+asg_scale_in_cooldown                       = 180
