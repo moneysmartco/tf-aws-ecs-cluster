@@ -7,8 +7,14 @@ yum update -y ecs-init
 
 start ecs
 
+# Debugging tool
+yum install -y wget htop vim
+wget https://github.com/bcicen/ctop/releases/download/v0.7.1/ctop-0.7.1-linux-amd64 -O /usr/local/bin/ctop
+chmod +x /usr/local/bin/ctop
+
 sleep 10
 
+# AWS-related tool
 yum install -y aws-cli jq
 instance_arn=$(curl -s http://localhost:51678/v1/metadata | jq -r '. | .ContainerInstanceArn' | awk -F/ '{print $NF}' )
 az=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
