@@ -60,6 +60,9 @@ variable "asg_cpu_alarm_period" {
 variable "asg_cpu_alarm_scale_out_threshold" {
   default = 60
 }
+variable "asg_scale_out_cooldown" {
+  default = 300
+}
 variable "asg_cpu_alarm_scale_out_evaluation_periods" {
   default = 1
 }
@@ -68,4 +71,7 @@ variable "asg_cpu_alarm_scale_in_threshold" {
 }
 variable "asg_cpu_alarm_scale_in_evaluation_periods" {
   default = 5
+}
+variable "asg_scale_in_cooldown" {
+  default = 300
 }
