@@ -2,7 +2,7 @@
 # SG
 #------------------------------
 resource "aws_security_group" "app_sg" {
-  name        = "${var.project_name}-${var.env}-sg"
+  name        = "tf-${var.project_name}-${var.env}-sg"
   description = "${var.project_name} ${var.env} secgroup"
   vpc_id = "${var.vpc_id}"
   ingress {
