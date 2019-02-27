@@ -12,6 +12,9 @@ yum install -y wget htop vim
 wget https://github.com/bcicen/ctop/releases/download/v0.7.1/ctop-0.7.1-linux-amd64 -O /usr/local/bin/ctop
 chmod +x /usr/local/bin/ctop
 
+rpm -i https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-6-x86_64/pgdg-ami201503-96-9.6-2.noarch.rpm
+yum install -y postgresql96.x86_64
+
 sleep 10
 
 # AWS-related tool
