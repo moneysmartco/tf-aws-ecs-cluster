@@ -56,15 +56,15 @@ data "template_file" "cloud_config" {
 # Auto-scaling group
 #------------------------------
 # Use latest ECS AMI
-# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-ami-versions.html
+# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/al2ami.html
 data "aws_ami" "ecs" {
   most_recent = true
   owners      = ["amazon"]
   filter {
     name    = "name"
-    values  = ["amzn-ami-*"]
+    values  = ["amzn2-ami-ecs-hvm-2.0.*"]
   }
-  name_regex = ".*-amazon-ecs-optimized$"
+  name_regex = ".*-x86_64-ebs$"
 }
 
 resource "aws_launch_configuration" "ecs_lc" {
