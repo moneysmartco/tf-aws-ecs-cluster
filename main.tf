@@ -45,17 +45,10 @@ resource "aws_security_group" "app_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  tags = "${local.app_security_group_tags}"
   lifecycle {
     ignore_changes = ["ingress"]
   }
-  count = "${length(local.ecs_asg_tags)}"
-  tags = [
-    {
-      key = "${element(keys(local.ecs_asg_tags), count.index)}"
-      value = "${element(values(local.ecs_asg_tags), count.index)}"
-      propagate_at_launch = true
-    }
-  ]
 }
 
 resource "aws_security_group_rule" "alb_to_instances" {
@@ -169,8 +162,14 @@ resource "aws_autoscaling_group" "ecs_asg" {
 #    propagate_at_launch = true
 #  }]
 
-  #use tag instead of interpolated tags
-  tag = "${local.ecs_asg_tags}"
+  count = "${length(local.ecs_asg_tags)}"
+  tags = [
+    {
+      key = "${element(keys(local.ecs_asg_tags), count.index)}"
+      value = "${element(values(local.ecs_asg_tags), count.index)}"
+      propagate_at_launch = true
+    }
+  ]
 }
 
 resource "aws_autoscaling_policy" "asg_scale_out" {
