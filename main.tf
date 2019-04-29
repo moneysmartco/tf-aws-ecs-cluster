@@ -1,3 +1,43 @@
+locals {
+  # env tag in map structure
+  env_tag = { Environment = "${var.env}" }
+
+  # ecs cluster name tag in map structure
+  ecs_cluster_name_tag = { Name = "${var.project_name}-${var.env}" }
+
+  # ecs auto scaling group name tag in map structure
+  ecs_asg_name_tag = { Name = "${var.project_name}-${var.env}" }
+
+  # enable datadog to be used tag in map structure
+  datadog_tag = { datadog-enabled = "true" }
+
+  # ec2 security group name tag in map structure
+  app_security_group_name_tag = { Name = "${var.project_name}-${var.env}-sg" }
+
+  #------------------------------------------------------------
+  # variables that will be mapped to the various resource block
+  #------------------------------------------------------------
+
+  # ecs cluster tags
+  ecs_cluster_tags = "${merge(var.tags, local.env_tag, local.ecs_cluster_name_tag)}"
+
+  # ecs asg tags
+  ecs_asg_tags = "${merge(var.tags, local.env_tag, local.ecs_asg_name_tag, local.datadog_tag)}"
+
+  # app ec2 security group name tags
+  app_security_group_tags = "${merge(var.tags, local.env_tag, local.app_security_group_name_tag)}"
+}
+
+# data structure to transform the tags structure(list of maps) required by auto scaling group resource
+data "null_data_source" "ecs_asg_tags" {
+  count = "${length(local.ecs_asg_tags)}"
+  inputs = {
+    key = "${element(keys(local.ecs_asg_tags), count.index)}"
+    value = "${element(values(local.ecs_asg_tags), count.index)}"
+    propagate_at_launch = true
+  }
+}
+
 #------------------------------
 # SG
 #------------------------------
@@ -17,9 +57,7 @@ resource "aws_security_group" "app_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  tags {
-    Name = "${var.project_name}-${var.env}-sg"
-  }
+  tags = "${local.app_security_group_tags}"
   lifecycle {
     ignore_changes = ["ingress"]
   }
@@ -40,6 +78,7 @@ resource "aws_security_group_rule" "alb_to_instances" {
 #------------------------------
 resource "aws_ecs_cluster" "ecs" {
   name = "${var.project_name}-${var.env}"
+  tags = "${local.ecs_cluster_tags}"
 }
 
 data "template_file" "cloud_config" {
@@ -113,27 +152,28 @@ resource "aws_autoscaling_group" "ecs_asg" {
     create_before_destroy = true
   }
 
-  tags = [{
-    key                 = "Name"
-    value               = "${var.project_name}-${var.env}"
-    propagate_at_launch = true
-  }, {
-    key                 = "Project"
-    value               = "${var.project_name}"
-    propagate_at_launch = true
-  }, {
-    key                 = "Environment"
-    value               = "${var.env}"
-    propagate_at_launch = true
-  }, {
-    key                 = "Type"
-    value               = "ec2"
-    propagate_at_launch = true
-  }, {
-    key                 = "datadog-enabled"
-    value               = "true"
-    propagate_at_launch = true
-  }]
+  # example of expected structure for tags in auto scaling group
+  # tags = [
+  #   {
+  #    key                 = "Name"
+  #    value               = "sg-staging"
+  #    propagate_at_launch = true
+  #   }, 
+  #   {
+  #    key                 = "Environment"
+  #    value               = "staging"
+  #    propagate_at_launch = true
+  #   },
+  #   .
+  #   .
+  #   .
+  #   {
+  #    key                 = "xxxxxx"
+  #    value               = "yyyyyy"
+  #    propagate_at_launch = true
+  #   }
+  # ]
+  tags = ["${data.null_data_source.ecs_asg_tags.*.outputs}"]
 }
 
 resource "aws_autoscaling_policy" "asg_scale_out" {
