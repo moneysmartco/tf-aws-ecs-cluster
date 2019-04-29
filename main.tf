@@ -1,3 +1,31 @@
+locals{
+  # env tag in map structure
+  env_tag = { Environment = "${var.env}" }
+
+  # ecs cluster name tag in map structure
+  ecs_cluster_name_tag = { Name = "${var.project_name}-${var.env}" }
+
+  # ecs auto scaling group name tag in map structure
+  ecs_asg_name_tag = { Name = "${var.project_name}-${var.env}" }
+
+  # ec2 security group name tag in map structure
+  app_security_group_name_tag = { Name = "${var.project_name}-${var.env}-sg" }
+
+  #------------------------------------------------------------
+  # variables that will be mapped to the various resource block
+  #------------------------------------------------------------
+
+  # ecs cluster tags
+  ecs_cluster_tags = "${merge(var.tags, local.env_tag, local.ecs_cluster_name_tag)}"
+
+  # ecs asg tags
+  ecs_asg_tags = "${merge(var.tags, local.env_tag, local.ecs_asg_name_tag)}"
+
+  # app ec2 security group name tags
+  app_security_group_tags = "${merge(var.tags, local.env_tag, local.app_security_group_name_tag)}"
+
+}
+
 #------------------------------
 # SG
 #------------------------------
@@ -17,9 +45,7 @@ resource "aws_security_group" "app_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  tags {
-    Name = "${var.project_name}-${var.env}-sg"
-  }
+  tags = "${local.app_security_group_tags}"
   lifecycle {
     ignore_changes = ["ingress"]
   }
@@ -40,6 +66,7 @@ resource "aws_security_group_rule" "alb_to_instances" {
 #------------------------------
 resource "aws_ecs_cluster" "ecs" {
   name = "${var.project_name}-${var.env}"
+  tags = "${local.ecs_cluster_tags}"
 }
 
 data "template_file" "cloud_config" {
@@ -113,27 +140,30 @@ resource "aws_autoscaling_group" "ecs_asg" {
     create_before_destroy = true
   }
 
-  tags = [{
-    key                 = "Name"
-    value               = "${var.project_name}-${var.env}"
-    propagate_at_launch = true
-  }, {
-    key                 = "Project"
-    value               = "${var.project_name}"
-    propagate_at_launch = true
-  }, {
-    key                 = "Environment"
-    value               = "${var.env}"
-    propagate_at_launch = true
-  }, {
-    key                 = "Type"
-    value               = "ec2"
-    propagate_at_launch = true
-  }, {
-    key                 = "datadog-enabled"
-    value               = "true"
-    propagate_at_launch = true
-  }]
+#  tags = [{
+#    key                 = "Name"
+#    value               = "${var.project_name}-${var.env}"
+#    propagate_at_launch = true
+#  }, {
+#    key                 = "Project"
+#    value               = "${var.project_name}"
+#    propagate_at_launch = true
+#  }, {
+#    key                 = "Environment"
+#    value               = "${var.env}"
+#    propagate_at_launch = true
+#  }, {
+#    key                 = "Type"
+#    value               = "ec2"
+#    propagate_at_launch = true
+#  }, {
+#    key                 = "datadog-enabled"
+#    value               = "true"
+#    propagate_at_launch = true
+#  }]
+
+  #use tag instead of interpolated tags
+  tags = "${local.ecs_asg_tags}"
 }
 
 resource "aws_autoscaling_policy" "asg_scale_out" {

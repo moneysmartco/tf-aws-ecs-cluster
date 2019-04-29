@@ -75,3 +75,19 @@ variable "asg_cpu_alarm_scale_in_evaluation_periods" {
 variable "asg_scale_in_cooldown" {
   default = 300
 }
+
+variable "tags" {
+  description = "Tagging resources with default values"
+  default = {
+    "Name" = ""
+    "Country" = ""
+    "Environment" = ""
+    "Repository" = ""
+    "Owner" = ""
+    "Department" = ""
+    "Team" = "shared"
+    "Product" = "common"
+    "Project" = "common"
+    "Stack" = ""
+  }
+} 
