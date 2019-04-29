@@ -1,4 +1,4 @@
-locals{
+locals {
   # env tag in map structure
   env_tag = { Environment = "${var.env}" }
 
@@ -7,6 +7,7 @@ locals{
 
   # ecs auto scaling group name tag in map structure
   ecs_asg_name_tag = { Name = "${var.project_name}-${var.env}" }
+  datadog_tag = { datadog-enabled = true }
 
   # ec2 security group name tag in map structure
   app_security_group_name_tag = { Name = "${var.project_name}-${var.env}-sg" }
@@ -19,11 +20,20 @@ locals{
   ecs_cluster_tags = "${merge(var.tags, local.env_tag, local.ecs_cluster_name_tag)}"
 
   # ecs asg tags
-  ecs_asg_tags = "${merge(var.tags, local.env_tag, local.ecs_asg_name_tag)}"
+  ecs_asg_tags = "${merge(var.tags, local.env_tag, local.ecs_asg_name_tag, local.datadog_tag)}"
 
   # app ec2 security group name tags
   app_security_group_tags = "${merge(var.tags, local.env_tag, local.app_security_group_name_tag)}"
+}
 
+# data structure to populate the tag structure required by auto scaling group resource
+data "null_data_source" "ecs_asg_tags" {
+  count = "${length(local.ecs_asg_tags)}"
+  inputs = {
+    key = "${element(keys(local.ecs_asg_tags), count.index)}"
+    value = "${element(values(local.ecs_asg_tags), count.index)}"
+    propagate_at_launch = true
+  }
 }
 
 #------------------------------
@@ -162,13 +172,8 @@ resource "aws_autoscaling_group" "ecs_asg" {
 #    propagate_at_launch = true
 #  }]
 
-  count = "${length(local.ecs_asg_tags)}"
   tags = [
-    {
-      key = "${element(keys(local.ecs_asg_tags), count.index)}"
-      value = "${element(values(local.ecs_asg_tags), count.index)}"
-      propagate_at_launch = true
-    }
+    "${data.null_data_source.ecs_asg_tags.*.outputs}"
   ]
 }
 
