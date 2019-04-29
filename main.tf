@@ -7,7 +7,9 @@ locals {
 
   # ecs auto scaling group name tag in map structure
   ecs_asg_name_tag = { Name = "${var.project_name}-${var.env}" }
-  datadog_tag = { datadog-enabled = true }
+
+  # enable datadog to be used tag in map structure
+  datadog_tag = { datadog-enabled = "true" }
 
   # ec2 security group name tag in map structure
   app_security_group_name_tag = { Name = "${var.project_name}-${var.env}-sg" }
@@ -26,7 +28,7 @@ locals {
   app_security_group_tags = "${merge(var.tags, local.env_tag, local.app_security_group_name_tag)}"
 }
 
-# data structure to populate the tag structure required by auto scaling group resource
+# data structure to transform the tags structure(list of maps) required by auto scaling group resource
 data "null_data_source" "ecs_asg_tags" {
   count = "${length(local.ecs_asg_tags)}"
   inputs = {
@@ -150,31 +152,28 @@ resource "aws_autoscaling_group" "ecs_asg" {
     create_before_destroy = true
   }
 
-#  tags = [{
-#    key                 = "Name"
-#    value               = "${var.project_name}-${var.env}"
-#    propagate_at_launch = true
-#  }, {
-#    key                 = "Project"
-#    value               = "${var.project_name}"
-#    propagate_at_launch = true
-#  }, {
-#    key                 = "Environment"
-#    value               = "${var.env}"
-#    propagate_at_launch = true
-#  }, {
-#    key                 = "Type"
-#    value               = "ec2"
-#    propagate_at_launch = true
-#  }, {
-#    key                 = "datadog-enabled"
-#    value               = "true"
-#    propagate_at_launch = true
-#  }]
-
-  tags = [
-    "${data.null_data_source.ecs_asg_tags.*.outputs}"
-  ]
+  # example of expected structure for tags in auto scaling group
+  # tags = [
+  #   {
+  #    key                 = "Name"
+  #    value               = "sg-staging"
+  #    propagate_at_launch = true
+  #   }, 
+  #   {
+  #    key                 = "Environment"
+  #    value               = "staging"
+  #    propagate_at_launch = true
+  #   },
+  #   .
+  #   .
+  #   .
+  #   {
+  #    key                 = "xxxxxx"
+  #    value               = "yyyyyy"
+  #    propagate_at_launch = true
+  #   }
+  # ]
+  tags = ["${data.null_data_source.ecs_asg_tags.*.outputs}"]
 }
 
 resource "aws_autoscaling_policy" "asg_scale_out" {
