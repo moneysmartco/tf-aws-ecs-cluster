@@ -90,4 +90,4 @@ variable "tags" {
     "Project" = "common"
     "Stack" = ""
   }
-} 
+}

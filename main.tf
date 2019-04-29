@@ -163,7 +163,7 @@ resource "aws_autoscaling_group" "ecs_asg" {
 #  }]
 
   #use tag instead of interpolated tags
-  tags = "${local.ecs_asg_tags}"
+  tag = "${local.ecs_asg_tags}"
 }
 
 resource "aws_autoscaling_policy" "asg_scale_out" {
