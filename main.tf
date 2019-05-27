@@ -137,6 +137,8 @@ resource "aws_autoscaling_group" "ecs_asg" {
 
   vpc_zone_identifier = "${split(",", var.private_subnet_ids)}"
 
+  termination_policies = "${var.asg_termination_policy}"
+
   enabled_metrics = [
     "GroupMinSize",
     "GroupMaxSize",

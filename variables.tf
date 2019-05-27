@@ -36,6 +36,11 @@ variable "ec2_type" {
 variable "iam_instance_profile" {
   default = ""
 }
+
+variable "asg_termination_policy" {
+  default = ["Default"]
+}
+
 ## DataDog
 variable "dd_api_key" {
   description = "Datadog agent API key"
