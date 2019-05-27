@@ -233,3 +233,11 @@ resource "aws_cloudwatch_metric_alarm" "cpu_alarm_in" {
   alarm_description = "This metric monitor EC2 instance CPU utilization on ECS ${var.project_name}-${var.env} cluster"
   alarm_actions     = ["${aws_autoscaling_policy.asg_scale_in.arn}"]
 }
+
+resource "aws_autoscaling_lifecycle_hook" "ecs_lifecycle_hook" {
+  name                   = "${aws_autoscaling_group.ecs_asg.name}-lifecycle-hook"
+  autoscaling_group_name = "${aws_autoscaling_group.ecs_asg.name}"
+  default_result         = "CONTINUE"
+  heartbeat_timeout      = 2000
+  lifecycle_transition   = "autoscaling:EC2_INSTANCE_TERMINATING"
+}
