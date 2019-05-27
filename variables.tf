@@ -96,3 +96,15 @@ variable "tags" {
     "Stack" = ""
   }
 }
+
+variable "enable_lifecycle_toggle" {
+  default = false
+}
+
+variable "heartbeat_timeout" {
+  default = 1800
+}
+
+variable "lifecycle_default_result" {
+  default = "CONTINUE"
+}

@@ -235,9 +235,10 @@ resource "aws_cloudwatch_metric_alarm" "cpu_alarm_in" {
 }
 
 resource "aws_autoscaling_lifecycle_hook" "ecs_lifecycle_hook" {
+  count                  = "${var.enable_lifecycle_toggle? 1: 0}"
   name                   = "${aws_autoscaling_group.ecs_asg.name}-lifecycle-hook"
   autoscaling_group_name = "${aws_autoscaling_group.ecs_asg.name}"
-  default_result         = "CONTINUE"
-  heartbeat_timeout      = 2000
+  default_result         = "${var.lifecycle_default_result}"
+  heartbeat_timeout      = "${var.heartbeat_timeout}"
   lifecycle_transition   = "autoscaling:EC2_INSTANCE_TERMINATING"
 }
