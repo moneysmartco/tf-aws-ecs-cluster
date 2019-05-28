@@ -108,3 +108,7 @@ variable "heartbeat_timeout" {
 variable "lifecycle_default_result" {
   default = "CONTINUE"
 }
+
+variable "ecs_user_data" {
+  default = ""
+}

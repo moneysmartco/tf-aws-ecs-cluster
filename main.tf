@@ -125,6 +125,7 @@ resource "aws_launch_configuration" "ecs_lc" {
   lifecycle {
     create_before_destroy = true
   }
+  user_data = "${var.ecs_user_data}"
 }
 
 resource "aws_autoscaling_group" "ecs_asg" {
