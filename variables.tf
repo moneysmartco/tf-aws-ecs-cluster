@@ -97,7 +97,7 @@ variable "tags" {
   }
 }
 
-variable "enable_lifecycle_toggle" {
+variable "enable_lifecycle_termination_toggle" {
   default = false
 }
 
