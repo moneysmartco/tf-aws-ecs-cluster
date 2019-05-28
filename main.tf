@@ -112,7 +112,7 @@ resource "aws_launch_configuration" "ecs_lc" {
   instance_type = "${var.ec2_type}"
 
   key_name             = "${var.deploy_key_name}"
-  user_data            = "ECS_CLUSTER=${var.project_name}-${var.env}\n${data.template_file.cloud_config.rendered}"
+  user_data            = "${data.template_file.cloud_config.rendered}"
   iam_instance_profile = "${var.iam_instance_profile}"
 
   security_groups = ["${aws_security_group.app_sg.id}"]
