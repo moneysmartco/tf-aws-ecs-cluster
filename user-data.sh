@@ -1,6 +1,5 @@
 #!/bin/bash
 cluster="${app_name}-${env}"
-ECS_CLUSTER="${app_name}-${env}"
 echo ECS_CLUSTER=$cluster >> /etc/ecs/ecs.config
 echo ECS_AVAILABLE_LOGGING_DRIVERS='["json-file","awslogs","syslog"]' >> /etc/ecs/ecs.config
 
