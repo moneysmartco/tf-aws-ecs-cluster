@@ -206,7 +206,7 @@ resource "aws_autoscaling_policy" "asg_scale_out_cpu_reservation" {
         statistic   = "Average"
       }
 
-    target_value = 60
+    target_value = "${var.autoscale_cpu_reservation_target_value}"
   }
 }
 
@@ -230,7 +230,7 @@ resource "aws_autoscaling_policy" "asg_scale_out_memory_reservation" {
         statistic   = "Average"
       }
 
-    target_value = 60
+    target_value = "${var.autoscale_memory_reservation_target_value}"
   }
 }
 

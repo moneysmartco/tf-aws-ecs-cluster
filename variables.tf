@@ -83,6 +83,12 @@ variable "asg_cpu_alarm_scale_in_evaluation_periods" {
 variable "asg_scale_in_cooldown" {
   default = 300
 }
+variable "autoscale_cpu_reservation_target_value" {
+  default = 60
+}
+variable "autoscale_memory_reservation_target_value" {
+  default = 60
+}
 
 variable "tags" {
   description = "Tagging resources with default values"
