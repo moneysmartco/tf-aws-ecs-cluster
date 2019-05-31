@@ -47,9 +47,6 @@ variable "dd_api_key" {
   default = ""
 }
 ## ASG
-variable "asg_desired_capacity" {
-  default = 1
-}
 variable "asg_min_size" {
   default = 1
 }

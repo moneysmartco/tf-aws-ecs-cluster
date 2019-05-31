@@ -131,7 +131,6 @@ resource "aws_autoscaling_group" "ecs_asg" {
   name                 = "${var.project_name}-${var.env}-asg"
   launch_configuration = "${aws_launch_configuration.ecs_lc.name}"
 
-  desired_capacity = "${var.asg_desired_capacity}"
   min_size         = "${var.asg_min_size}"
   max_size         = "${var.asg_max_size}"
 
@@ -189,7 +188,7 @@ resource "aws_autoscaling_policy" "asg_scale_out" {
 
 resource "aws_autoscaling_policy" "asg_scale_out_cpu_reservation" {
   count                   = "${var.enable_asg_cpu_reservation_scaling_policy ? 1 : 0}"
-  name                    = "${var.project_name}-${var.env}-target-tracking-cpu-reserve-60-scale_out-policy"
+  name                    = "${var.project_name}-${var.env}-target-tracking-cpu-reserve-60-scale-out-policy"
   adjustment_type         = "ChangeInCapacity"
   policy_type             = "TargetTrackingScaling"
   scaling_adjustment      = 1
@@ -213,7 +212,7 @@ resource "aws_autoscaling_policy" "asg_scale_out_cpu_reservation" {
 
 resource "aws_autoscaling_policy" "asg_scale_out_memory_reservation" {
   count                   = "${var.enable_asg_memory_reservation_scaling_policy ? 1 : 0}"
-  name                    = "${var.project_name}-${var.env}-target-tracking-memory-reserve-60-scale_out-policy"
+  name                    = "${var.project_name}-${var.env}-target-tracking-memory-reserve-60-scale-out-policy"
   adjustment_type         = "ChangeInCapacity"
   policy_type             = "TargetTrackingScaling"
   scaling_adjustment      = 1
