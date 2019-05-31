@@ -204,6 +204,7 @@ resource "aws_autoscaling_policy" "asg_scale_out_cpu_reservation" {
         metric_name = "CPUReservation"
         namespace   = "ecs"
         statistic   = "Average"
+        unit        = "Percent"
       }
 
     target_value = "${var.autoscale_cpu_reservation_target_value}"
@@ -228,6 +229,7 @@ resource "aws_autoscaling_policy" "asg_scale_out_memory_reservation" {
         metric_name = "MemoryReservation"
         namespace   = "ecs"
         statistic   = "Average"
+        unit        = "Percent"
       }
 
     target_value = "${var.autoscale_memory_reservation_target_value}"
