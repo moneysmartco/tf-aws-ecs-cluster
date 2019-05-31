@@ -187,6 +187,29 @@ resource "aws_autoscaling_policy" "asg_scale_out" {
   autoscaling_group_name  = "${aws_autoscaling_group.ecs_asg.name}"
 }
 
+resource "aws_autoscaling_policy" "asg_scale_out_cpu_reservation" {
+  count                   = "${var.enable_asg_scaling_policy ? 1 : 0}"
+  name                    = "${var.project_name}-${var.env}-cpu-reservation-scale_out-policy"
+  adjustment_type         = "ChangeInCapacity"
+  policy_type             = "TargetTrackingScaling"
+  scaling_adjustment      = 1
+  cooldown                = "${var.asg_scale_out_cooldown}"
+  autoscaling_group_name  = "${aws_autoscaling_group.ecs_asg.name}"
+  target_tracking_configuration {
+    customized_metric_specification {
+      metric_dimension {
+        name  = "ClusterName"
+        value = "${aws_ecs_cluster.ecs.name}"
+        }
+
+        metric_name = "CPUReservation"
+        namespace   = "ecs"
+        statistic   = "Average"
+      }
+
+    target_value = 60.0
+  }
+}
 resource "aws_cloudwatch_metric_alarm" "cpu_alarm_out" {
   count               = "${var.enable_asg_scaling_policy ? 1 : 0}"
   alarm_name          = "asg-${var.project_name}-${var.env}-alarm-above-${var.asg_cpu_alarm_scale_out_threshold}"
