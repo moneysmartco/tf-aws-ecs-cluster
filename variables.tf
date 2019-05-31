@@ -59,6 +59,12 @@ variable "asg_max_size" {
 variable "enable_asg_scaling_policy" {
   default = false
 }
+variable "enable_asg_cpu_reservation_scaling_policy" {
+  default = false
+}
+variable "enable_asg_memory_reservation_scaling_policy" {
+  default = false
+}
 variable "asg_cpu_alarm_period" {
   default = 60
 }
