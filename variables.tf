@@ -90,6 +90,10 @@ variable "autoscale_memory_reservation_target_value" {
   default = 60
 }
 
+variable "estimated_instance_warmup" {
+  default = 300
+}
+
 variable "tags" {
   description = "Tagging resources with default values"
   default = {
