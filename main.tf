@@ -191,7 +191,6 @@ resource "aws_autoscaling_policy" "asg_scale_out_cpu_reservation" {
   name                    = "${var.project_name}-${var.env}-target-tracking-cpu-reserve-${var.autoscale_cpu_reservation_target_value}-scale-out-policy"
   adjustment_type         = "ChangeInCapacity"
   policy_type             = "TargetTrackingScaling"
-  scaling_adjustment      = 1
   autoscaling_group_name  = "${aws_autoscaling_group.ecs_asg.name}"
   target_tracking_configuration {
     customized_metric_specification {
@@ -215,7 +214,6 @@ resource "aws_autoscaling_policy" "asg_scale_out_memory_reservation" {
   name                    = "${var.project_name}-${var.env}-target-tracking-memory-reserve-${var.autoscale_memory_reservation_target_value}-scale-out-policy"
   adjustment_type         = "ChangeInCapacity"
   policy_type             = "TargetTrackingScaling"
-  scaling_adjustment      = 1
   autoscaling_group_name  = "${aws_autoscaling_group.ecs_asg.name}"
   target_tracking_configuration {
     customized_metric_specification {
