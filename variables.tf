@@ -47,9 +47,6 @@ variable "dd_api_key" {
   default = ""
 }
 ## ASG
-variable "asg_desired_capacity" {
-  default = 1
-}
 variable "asg_min_size" {
   default = 1
 }
@@ -57,6 +54,12 @@ variable "asg_max_size" {
   default = 5
 }
 variable "enable_asg_scaling_policy" {
+  default = false
+}
+variable "enable_asg_cpu_reservation_scaling_policy" {
+  default = false
+}
+variable "enable_asg_memory_reservation_scaling_policy" {
   default = false
 }
 variable "asg_cpu_alarm_period" {
@@ -80,6 +83,16 @@ variable "asg_cpu_alarm_scale_in_evaluation_periods" {
 variable "asg_scale_in_cooldown" {
   default = 300
 }
+variable "autoscale_cpu_reservation_target_value" {
+  default = 60
+}
+variable "autoscale_memory_reservation_target_value" {
+  default = 60
+}
+
+variable "estimated_instance_warmup" {
+  default = 300
+}
 
 variable "tags" {
   description = "Tagging resources with default values"
@@ -95,4 +108,20 @@ variable "tags" {
     "Project" = "common"
     "Stack" = ""
   }
+}
+
+variable "enable_lifecycle_termination_toggle" {
+  default = false
+}
+
+variable "heartbeat_timeout" {
+  default = 1800
+}
+
+variable "lifecycle_default_result" {
+  default = "CONTINUE"
+}
+
+variable "ecs_user_data" {
+  default = ""
 }

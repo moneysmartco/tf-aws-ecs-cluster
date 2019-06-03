@@ -131,7 +131,6 @@ resource "aws_autoscaling_group" "ecs_asg" {
   name                 = "${var.project_name}-${var.env}-asg"
   launch_configuration = "${aws_launch_configuration.ecs_lc.name}"
 
-  desired_capacity = "${var.asg_desired_capacity}"
   min_size         = "${var.asg_min_size}"
   max_size         = "${var.asg_max_size}"
 
@@ -187,6 +186,54 @@ resource "aws_autoscaling_policy" "asg_scale_out" {
   autoscaling_group_name  = "${aws_autoscaling_group.ecs_asg.name}"
 }
 
+resource "aws_autoscaling_policy" "asg_scale_out_cpu_reservation" {
+  count                     = "${var.enable_asg_cpu_reservation_scaling_policy ? 1 : 0}"
+  name                      = "${var.project_name}-${var.env}-target-tracking-cpu-reserve-${var.autoscale_cpu_reservation_target_value}-scale-out-policy"
+  adjustment_type           = "ChangeInCapacity"
+  policy_type               = "TargetTrackingScaling"
+  autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg.name}"
+  estimated_instance_warmup = "${var.estimated_instance_warmup}"
+  target_tracking_configuration {
+    customized_metric_specification {
+      metric_dimension {
+        name  = "ClusterName"
+        value = "${aws_ecs_cluster.ecs.name}"
+        }
+
+        metric_name = "CPUReservation"
+        namespace   = "ecs"
+        statistic   = "Average"
+        unit        = "Percent"
+      }
+
+    target_value = "${var.autoscale_cpu_reservation_target_value}"
+  }
+}
+
+resource "aws_autoscaling_policy" "asg_scale_out_memory_reservation" {
+  count                     = "${var.enable_asg_memory_reservation_scaling_policy ? 1 : 0}"
+  name                      = "${var.project_name}-${var.env}-target-tracking-memory-reserve-${var.autoscale_memory_reservation_target_value}-scale-out-policy"
+  adjustment_type           = "ChangeInCapacity"
+  policy_type               = "TargetTrackingScaling"
+  autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg.name}"
+  estimated_instance_warmup = "${var.estimated_instance_warmup}"
+  target_tracking_configuration {
+    customized_metric_specification {
+      metric_dimension {
+        name  = "ClusterName"
+        value = "${aws_ecs_cluster.ecs.name}"
+        }
+
+        metric_name = "MemoryReservation"
+        namespace   = "ecs"
+        statistic   = "Average"
+        unit        = "Percent"
+      }
+
+    target_value = "${var.autoscale_memory_reservation_target_value}"
+  }
+}
+
 resource "aws_cloudwatch_metric_alarm" "cpu_alarm_out" {
   count               = "${var.enable_asg_scaling_policy ? 1 : 0}"
   alarm_name          = "asg-${var.project_name}-${var.env}-alarm-above-${var.asg_cpu_alarm_scale_out_threshold}"
@@ -232,4 +279,14 @@ resource "aws_cloudwatch_metric_alarm" "cpu_alarm_in" {
 
   alarm_description = "This metric monitor EC2 instance CPU utilization on ECS ${var.project_name}-${var.env} cluster"
   alarm_actions     = ["${aws_autoscaling_policy.asg_scale_in.arn}"]
+}
+
+resource "aws_autoscaling_lifecycle_hook" "ecs_lifecycle_termination_hook" {
+  count                  = "${var.enable_lifecycle_termination_toggle? 1: 0}"
+
+  name                   = "${aws_autoscaling_group.ecs_asg.name}-lifecycle-termination-hook"
+  autoscaling_group_name = "${aws_autoscaling_group.ecs_asg.name}"
+  default_result         = "${var.lifecycle_default_result}"
+  heartbeat_timeout      = "${var.heartbeat_timeout}"
+  lifecycle_transition   = "autoscaling:EC2_INSTANCE_TERMINATING"
 }
