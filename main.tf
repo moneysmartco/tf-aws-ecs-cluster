@@ -106,6 +106,30 @@ data "aws_ami" "ecs" {
   name_regex = ".*-x86_64-ebs$"
 }
 
+resource "aws_launch_template" "ecs_lt" {
+  name_prefix   = "${var.project_name}-${var.env}-lt-"
+  image_id      = "${data.aws_ami.ecs.id}"
+  description   = "Lanuch template for ${var.project_name}-${var.env}"
+
+  key_name             = "${var.deploy_key_name}"
+  user_data            = "${data.template_file.cloud_config.rendered}"
+  iam_instance_profile {
+    name = "${var.iam_instance_profile}"
+  }
+
+  ebs_optimized = true
+  block_device_mappings {
+    ebs {
+      volume_type = "${var.root_ebs_type}"
+      volume_size = "${var.root_ebs_size}"
+    }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 resource "aws_launch_configuration" "ecs_lc" {
   name_prefix   = "${var.project_name}-${var.env}-lc-"
   image_id      = "${data.aws_ami.ecs.id}"
@@ -159,7 +183,7 @@ resource "aws_autoscaling_group" "ecs_asg" {
   #    key                 = "Name"
   #    value               = "sg-staging"
   #    propagate_at_launch = true
-  #   }, 
+  #   },
   #   {
   #    key                 = "Environment"
   #    value               = "staging"

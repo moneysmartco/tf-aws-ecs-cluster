@@ -34,6 +34,7 @@ variable "ec2_type" {
   default = "t2.medium"
 }
 variable "iam_instance_profile" {
+  description = "Instance profile name for launch configuration / launch template"
   default = ""
 }
 
