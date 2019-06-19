@@ -301,7 +301,7 @@ resource "aws_launch_template" "ecs_lt" {
   description   = "Lanuch template for ${var.project_name}-${var.env}"
 
   key_name             = "${var.deploy_key_name}"
-  user_data            = "${data.template_file.cloud_config.rendered}"
+  user_data            = "${base64encode(data.template_file.cloud_config.rendered)}"
   iam_instance_profile {
     name = "${var.iam_instance_profile}"
   }
@@ -326,7 +326,6 @@ resource "aws_autoscaling_group" "ecs_asg_lt" {
     launch_template {
       launch_template_specification {
         launch_template_id = "${aws_launch_template.ecs_lt.id}"
-        version            = "$$Latest"
       }
 
       override {
