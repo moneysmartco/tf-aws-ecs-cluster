@@ -300,8 +300,10 @@ resource "aws_launch_template" "ecs_lt" {
   image_id      = "${data.aws_ami.ecs.id}"
   description   = "Lanuch template for ${var.project_name}-${var.env} at ${timestamp()}"
 
-  key_name             = "${var.deploy_key_name}"
-  user_data            = "${base64encode(data.template_file.cloud_config.rendered)}"
+  key_name               = "${var.deploy_key_name}"
+  user_data              = "${base64encode(data.template_file.cloud_config.rendered)}"
+  vpc_security_group_ids = ["${aws_security_group.app_sg.id}"]
+
   iam_instance_profile {
     name = "${var.iam_instance_profile}"
   }
@@ -315,7 +317,10 @@ resource "aws_launch_template" "ecs_lt" {
     }
   }
 
-  vpc_security_group_ids = ["${aws_security_group.app_sg.id}"]
+  # Detailed monitoring
+  monitoring {
+    enabled = true
+  }
 
   lifecycle {
     ignore_changes = ["description"]
