@@ -397,3 +397,61 @@ resource "aws_autoscaling_group" "ecs_asg_lt" {
   # ]
   tags = ["${data.null_data_source.ecs_asg_tags.*.outputs}"]
 }
+
+resource "aws_autoscaling_policy" "asg_lt_scale_out_cpu_reservation" {
+  count                     = "${var.enable_asg_cpu_reservation_scaling_policy ? 1 : 0}"
+  name                      = "${var.project_name}-${var.env}-lt-target-tracking-cpu-reserve-${var.autoscale_cpu_reservation_target_value}-scale-out-policy"
+  adjustment_type           = "ChangeInCapacity"
+  policy_type               = "TargetTrackingScaling"
+  autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg_lt.name}"
+  estimated_instance_warmup = "${var.estimated_instance_warmup}"
+  target_tracking_configuration {
+    customized_metric_specification {
+      metric_dimension {
+        name  = "ClusterName"
+        value = "${aws_ecs_cluster.ecs.name}"
+        }
+
+        metric_name = "CPUReservation"
+        namespace   = "AWS/ECS"
+        statistic   = "Average"
+        unit        = "Percent"
+      }
+
+    target_value = "${var.autoscale_cpu_reservation_target_value}"
+  }
+}
+
+resource "aws_autoscaling_policy" "asg_lt_scale_out_memory_reservation" {
+  count                     = "${var.enable_asg_memory_reservation_scaling_policy ? 1 : 0}"
+  name                      = "${var.project_name}-${var.env}-lt-target-tracking-memory-reserve-${var.autoscale_memory_reservation_target_value}-scale-out-policy"
+  adjustment_type           = "ChangeInCapacity"
+  policy_type               = "TargetTrackingScaling"
+  autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg_lt.name}"
+  estimated_instance_warmup = "${var.estimated_instance_warmup}"
+  target_tracking_configuration {
+    customized_metric_specification {
+      metric_dimension {
+        name  = "ClusterName"
+        value = "${aws_ecs_cluster.ecs.name}"
+        }
+
+        metric_name = "MemoryReservation"
+        namespace   = "AWS/ECS"
+        statistic   = "Average"
+        unit        = "Percent"
+      }
+
+    target_value = "${var.autoscale_memory_reservation_target_value}"
+  }
+}
+
+resource "aws_autoscaling_lifecycle_hook" "ecs_lt_lifecycle_termination_hook" {
+  count                  = "${var.enable_lifecycle_termination_toggle? 1: 0}"
+
+  name                   = "${aws_autoscaling_group.ecs_asg_lt.name}-lifecycle-termination-hook"
+  autoscaling_group_name = "${aws_autoscaling_group.ecs_asg_lt.name}"
+  default_result         = "${var.lifecycle_default_result}"
+  heartbeat_timeout      = "${var.heartbeat_timeout}"
+  lifecycle_transition   = "autoscaling:EC2_INSTANCE_TERMINATING"
+}
