@@ -189,7 +189,6 @@ resource "aws_autoscaling_policy" "asg_scale_out" {
 resource "aws_autoscaling_policy" "asg_scale_out_cpu_reservation" {
   count                     = "${var.enable_asg_cpu_reservation_scaling_policy ? 1 : 0}"
   name                      = "${var.project_name}-${var.env}-target-tracking-cpu-reserve-${var.autoscale_cpu_reservation_target_value}-scale-out-policy"
-  adjustment_type           = "ChangeInCapacity"
   policy_type               = "TargetTrackingScaling"
   autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg.name}"
   estimated_instance_warmup = "${var.estimated_instance_warmup}"
@@ -213,7 +212,6 @@ resource "aws_autoscaling_policy" "asg_scale_out_cpu_reservation" {
 resource "aws_autoscaling_policy" "asg_scale_out_memory_reservation" {
   count                     = "${var.enable_asg_memory_reservation_scaling_policy ? 1 : 0}"
   name                      = "${var.project_name}-${var.env}-target-tracking-memory-reserve-${var.autoscale_memory_reservation_target_value}-scale-out-policy"
-  adjustment_type           = "ChangeInCapacity"
   policy_type               = "TargetTrackingScaling"
   autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg.name}"
   estimated_instance_warmup = "${var.estimated_instance_warmup}"
@@ -406,7 +404,6 @@ resource "aws_autoscaling_group" "ecs_asg_lt" {
 resource "aws_autoscaling_policy" "asg_lt_scale_out_cpu_reservation" {
   count                     = "${var.enable_asg_cpu_reservation_scaling_policy ? 1 : 0}"
   name                      = "${var.project_name}-${var.env}-lt-target-tracking-cpu-reserve-${var.autoscale_cpu_reservation_target_value}-scale-out-policy"
-  adjustment_type           = "ChangeInCapacity"
   policy_type               = "TargetTrackingScaling"
   autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg_lt.name}"
   estimated_instance_warmup = "${var.estimated_instance_warmup}"
@@ -430,7 +427,6 @@ resource "aws_autoscaling_policy" "asg_lt_scale_out_cpu_reservation" {
 resource "aws_autoscaling_policy" "asg_lt_scale_out_memory_reservation" {
   count                     = "${var.enable_asg_memory_reservation_scaling_policy ? 1 : 0}"
   name                      = "${var.project_name}-${var.env}-lt-target-tracking-memory-reserve-${var.autoscale_memory_reservation_target_value}-scale-out-policy"
-  adjustment_type           = "ChangeInCapacity"
   policy_type               = "TargetTrackingScaling"
   autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg_lt.name}"
   estimated_instance_warmup = "${var.estimated_instance_warmup}"
