@@ -306,11 +306,13 @@ resource "aws_launch_template" "ecs_lt" {
     name = "${var.iam_instance_profile}"
   }
 
-  ebs_optimized = true
   block_device_mappings {
+    device_name = "${var.lt_ebs_device_name}"
+
     ebs {
       volume_type = "${var.root_ebs_type}"
       volume_size = "${var.root_ebs_size}"
+      iops        = 0
     }
   }
 
@@ -326,6 +328,7 @@ resource "aws_autoscaling_group" "ecs_asg_lt" {
     launch_template {
       launch_template_specification {
         launch_template_id = "${aws_launch_template.ecs_lt.id}"
+        version            = "$$Latest"
       }
 
       override {

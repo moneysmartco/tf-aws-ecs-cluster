@@ -128,6 +128,10 @@ variable "ecs_user_data" {
 }
 
 ## Auto Scaling Group in Launch Template
+variable "lt_ebs_device_name" {
+  default = "/dev/xvda"
+}
+
 variable "asg_lt_ec2_type_1" {
   default = "m4.large"
 }
