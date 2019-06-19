@@ -126,3 +126,37 @@ variable "lifecycle_default_result" {
 variable "ecs_user_data" {
   default = ""
 }
+
+## Auto Scaling Group in Launch Template
+variable "asg_lt_ec2_type_1" {
+  default = "m4.large"
+}
+
+variable "asg_lt_ec2_type_2" {
+  default = "m5.large"
+}
+
+variable "asg_lt_on_demand_allocation_strategy" {
+  description = "Strategy to use when launching on-demand instances."
+  default = "prioritized"
+}
+
+variable "asg_lt_on_demand_base_capacity" {
+  description = "Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances."
+  default = 0
+}
+
+variable "asg_lt_on_demand_percentage_above_base_capacity" {
+  description = "Percentage split between on-demand and Spot instances above the base on-demand capacity."
+  default = 100
+}
+
+variable "asg_lt_spot_allocation_strategy" {
+  description = "How to allocate capacity across the Spot pools. (diversified / lowest-price)"
+  default = "lowest-price"
+}
+
+variable "asg_lt_spot_instance_pools" {
+  description = "Number of Spot pools per availability zone to allocate capacity."
+  default = 2
+}

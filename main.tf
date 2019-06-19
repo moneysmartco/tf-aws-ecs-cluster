@@ -106,30 +106,6 @@ data "aws_ami" "ecs" {
   name_regex = ".*-x86_64-ebs$"
 }
 
-resource "aws_launch_template" "ecs_lt" {
-  name_prefix   = "${var.project_name}-${var.env}-lt-"
-  image_id      = "${data.aws_ami.ecs.id}"
-  description   = "Lanuch template for ${var.project_name}-${var.env}"
-
-  key_name             = "${var.deploy_key_name}"
-  user_data            = "${data.template_file.cloud_config.rendered}"
-  iam_instance_profile {
-    name = "${var.iam_instance_profile}"
-  }
-
-  ebs_optimized = true
-  block_device_mappings {
-    ebs {
-      volume_type = "${var.root_ebs_type}"
-      volume_size = "${var.root_ebs_size}"
-    }
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
 resource "aws_launch_configuration" "ecs_lc" {
   name_prefix   = "${var.project_name}-${var.env}-lc-"
   image_id      = "${data.aws_ami.ecs.id}"
@@ -313,4 +289,106 @@ resource "aws_autoscaling_lifecycle_hook" "ecs_lifecycle_termination_hook" {
   default_result         = "${var.lifecycle_default_result}"
   heartbeat_timeout      = "${var.heartbeat_timeout}"
   lifecycle_transition   = "autoscaling:EC2_INSTANCE_TERMINATING"
+}
+
+
+#------------------------------------------
+# Auto-scaling group via Launch Template
+#------------------------------------------
+resource "aws_launch_template" "ecs_lt" {
+  name_prefix   = "${var.project_name}-${var.env}-lt-"
+  image_id      = "${data.aws_ami.ecs.id}"
+  description   = "Lanuch template for ${var.project_name}-${var.env}"
+
+  key_name             = "${var.deploy_key_name}"
+  user_data            = "${data.template_file.cloud_config.rendered}"
+  iam_instance_profile {
+    name = "${var.iam_instance_profile}"
+  }
+
+  ebs_optimized = true
+  block_device_mappings {
+    ebs {
+      volume_type = "${var.root_ebs_type}"
+      volume_size = "${var.root_ebs_size}"
+    }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_autoscaling_group" "ecs_asg_lt" {
+  name                 = "${var.project_name}-${var.env}-asg-lt"
+
+  mixed_instances_policy {
+    launch_template {
+      launch_template_specification {
+        launch_template_id = "${aws_launch_template.ecs_lt.id}"
+        version            = "$$Latest"
+      }
+
+      override {
+        instance_type = "${var.asg_lt_ec2_type_1}"
+      }
+
+      override {
+        instance_type = "${var.asg_lt_ec2_type_2}"
+      }
+    }
+
+    instances_distribution {
+      on_demand_allocation_strategy            = "${var.asg_lt_on_demand_allocation_strategy}"
+      on_demand_base_capacity                  = "${var.asg_lt_on_demand_base_capacity}"
+      on_demand_percentage_above_base_capacity = "${var.asg_lt_on_demand_percentage_above_base_capacity}"
+      spot_allocation_strategy                 = "${var.asg_lt_spot_allocation_strategy}"
+      spot_instance_pools                      = "${var.asg_lt_spot_instance_pools}"
+    }
+  }
+
+  min_size         = "${var.asg_min_size}"
+  max_size         = "${var.asg_max_size}"
+
+  vpc_zone_identifier = "${split(",", var.private_subnet_ids)}"
+
+  termination_policies = "${var.asg_termination_policy}"
+
+  enabled_metrics = [
+    "GroupMinSize",
+    "GroupMaxSize",
+    "GroupDesiredCapacity",
+    "GroupInServiceInstances",
+    "GroupPendingInstances",
+    "GroupStandbyInstances",
+    "GroupTerminatingInstances",
+    "GroupTotalInstances"
+  ]
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  # example of expected structure for tags in auto scaling group
+  # tags = [
+  #   {
+  #    key                 = "Name"
+  #    value               = "sg-staging"
+  #    propagate_at_launch = true
+  #   },
+  #   {
+  #    key                 = "Environment"
+  #    value               = "staging"
+  #    propagate_at_launch = true
+  #   },
+  #   .
+  #   .
+  #   .
+  #   {
+  #    key                 = "xxxxxx"
+  #    value               = "yyyyyy"
+  #    propagate_at_launch = true
+  #   }
+  # ]
+  tags = ["${data.null_data_source.ecs_asg_tags.*.outputs}"]
 }
