@@ -316,6 +316,8 @@ resource "aws_launch_template" "ecs_lt" {
     }
   }
 
+  vpc_security_group_ids = ["${aws_security_group.app_sg.id}"]
+
   lifecycle {
     create_before_destroy = true
   }
