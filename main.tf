@@ -298,7 +298,7 @@ resource "aws_autoscaling_lifecycle_hook" "ecs_lifecycle_termination_hook" {
 resource "aws_launch_template" "ecs_lt" {
   name_prefix   = "${var.project_name}-${var.env}-lt-"
   image_id      = "${data.aws_ami.ecs.id}"
-  description   = "Lanuch template for ${var.project_name}-${var.env}"
+  description   = "Lanuch template for ${var.project_name}-${var.env} at ${timestamp()}"
 
   key_name             = "${var.deploy_key_name}"
   user_data            = "${base64encode(data.template_file.cloud_config.rendered)}"
