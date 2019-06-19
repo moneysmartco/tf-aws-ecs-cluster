@@ -133,11 +133,11 @@ variable "lt_ebs_device_name" {
 }
 
 variable "asg_lt_ec2_type_1" {
-  default = "m4.large"
+  default = "c4.2xlarge"
 }
 
 variable "asg_lt_ec2_type_2" {
-  default = "m5.large"
+  default = "c5.2xlarge"
 }
 
 variable "asg_lt_on_demand_allocation_strategy" {
@@ -152,7 +152,10 @@ variable "asg_lt_on_demand_base_capacity" {
 
 variable "asg_lt_on_demand_percentage_above_base_capacity" {
   description = "Percentage split between on-demand and Spot instances above the base on-demand capacity."
-  default = 100
+  # default = 100
+
+  # TODO: Turn off before merge to master
+  default = 0
 }
 
 variable "asg_lt_spot_allocation_strategy" {

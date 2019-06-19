@@ -312,13 +312,14 @@ resource "aws_launch_template" "ecs_lt" {
     ebs {
       volume_type = "${var.root_ebs_type}"
       volume_size = "${var.root_ebs_size}"
-      iops        = 0
     }
   }
 
   vpc_security_group_ids = ["${aws_security_group.app_sg.id}"]
 
   lifecycle {
+    ignore_changes = ["description"]
+
     create_before_destroy = true
   }
 }
