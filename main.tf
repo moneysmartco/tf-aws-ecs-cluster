@@ -355,10 +355,8 @@ resource "aws_autoscaling_group" "ecs_asg_lt" {
     }
 
     instances_distribution {
-      on_demand_allocation_strategy            = "${var.asg_lt_on_demand_allocation_strategy}"
       on_demand_base_capacity                  = "${var.asg_lt_on_demand_base_capacity}"
       on_demand_percentage_above_base_capacity = "${var.asg_lt_on_demand_percentage_above_base_capacity}"
-      spot_allocation_strategy                 = "${var.asg_lt_spot_allocation_strategy}"
       spot_instance_pools                      = "${var.asg_lt_spot_instance_pools}"
     }
   }

@@ -150,11 +150,6 @@ variable "asg_lt_ec2_type_2" {
   default = "c5.2xlarge"
 }
 
-variable "asg_lt_on_demand_allocation_strategy" {
-  description = "Strategy to use when launching on-demand instances."
-  default = "prioritized"
-}
-
 variable "asg_lt_on_demand_base_capacity" {
   description = "Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances."
   default = 0
@@ -162,15 +157,7 @@ variable "asg_lt_on_demand_base_capacity" {
 
 variable "asg_lt_on_demand_percentage_above_base_capacity" {
   description = "Percentage split between on-demand and Spot instances above the base on-demand capacity."
-  # default = 100
-
-  # TODO: Turn off before merge to master
-  default = 0
-}
-
-variable "asg_lt_spot_allocation_strategy" {
-  description = "How to allocate capacity across the Spot pools. (diversified / lowest-price)"
-  default = "lowest-price"
+  default = 100
 }
 
 variable "asg_lt_spot_instance_pools" {
