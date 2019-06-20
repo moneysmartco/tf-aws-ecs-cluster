@@ -107,6 +107,8 @@ data "aws_ami" "ecs" {
 }
 
 resource "aws_launch_configuration" "ecs_lc" {
+  count = "${var.enable_asg_classic_mode ? 1 : 0}"
+
   name_prefix   = "${var.project_name}-${var.env}-lc-"
   image_id      = "${data.aws_ami.ecs.id}"
   instance_type = "${var.ec2_type}"
@@ -128,6 +130,8 @@ resource "aws_launch_configuration" "ecs_lc" {
 }
 
 resource "aws_autoscaling_group" "ecs_asg" {
+  count = "${var.enable_asg_classic_mode ? 1 : 0}"
+
   name                 = "${var.project_name}-${var.env}-asg"
   launch_configuration = "${aws_launch_configuration.ecs_lc.name}"
 
@@ -178,7 +182,7 @@ resource "aws_autoscaling_group" "ecs_asg" {
 }
 
 resource "aws_autoscaling_policy" "asg_scale_out" {
-  count                   = "${var.enable_asg_scaling_policy ? 1 : 0}"
+  count                   = "${var.enable_asg_classic_mode && var.enable_asg_scaling_policy ? 1 : 0}"
   name                    = "${var.project_name}-${var.env}-scale_out-policy"
   scaling_adjustment      = 1
   adjustment_type         = "ChangeInCapacity"
@@ -187,7 +191,7 @@ resource "aws_autoscaling_policy" "asg_scale_out" {
 }
 
 resource "aws_autoscaling_policy" "asg_scale_out_cpu_reservation" {
-  count                     = "${var.enable_asg_cpu_reservation_scaling_policy ? 1 : 0}"
+  count                     = "${var.enable_asg_classic_mode && var.enable_asg_cpu_reservation_scaling_policy ? 1 : 0}"
   name                      = "${var.project_name}-${var.env}-target-tracking-cpu-reserve-${var.autoscale_cpu_reservation_target_value}-scale-out-policy"
   policy_type               = "TargetTrackingScaling"
   autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg.name}"
@@ -210,7 +214,7 @@ resource "aws_autoscaling_policy" "asg_scale_out_cpu_reservation" {
 }
 
 resource "aws_autoscaling_policy" "asg_scale_out_memory_reservation" {
-  count                     = "${var.enable_asg_memory_reservation_scaling_policy ? 1 : 0}"
+  count                     = "${var.enable_asg_classic_mode && var.enable_asg_memory_reservation_scaling_policy ? 1 : 0}"
   name                      = "${var.project_name}-${var.env}-target-tracking-memory-reserve-${var.autoscale_memory_reservation_target_value}-scale-out-policy"
   policy_type               = "TargetTrackingScaling"
   autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg.name}"
@@ -233,7 +237,7 @@ resource "aws_autoscaling_policy" "asg_scale_out_memory_reservation" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_alarm_out" {
-  count               = "${var.enable_asg_scaling_policy ? 1 : 0}"
+  count               = "${var.enable_asg_classic_mode && var.enable_asg_scaling_policy ? 1 : 0}"
   alarm_name          = "asg-${var.project_name}-${var.env}-alarm-above-${var.asg_cpu_alarm_scale_out_threshold}"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "${var.asg_cpu_alarm_scale_out_evaluation_periods}"
@@ -252,7 +256,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_alarm_out" {
 }
 
 resource "aws_autoscaling_policy" "asg_scale_in" {
-  count                   = "${var.enable_asg_scaling_policy ? 1 : 0}"
+  count                   = "${var.enable_asg_classic_mode && var.enable_asg_scaling_policy ? 1 : 0}"
   name                    = "${var.project_name}-${var.env}-scale_in-policy"
   scaling_adjustment      = -1
   adjustment_type         = "ChangeInCapacity"
@@ -261,7 +265,7 @@ resource "aws_autoscaling_policy" "asg_scale_in" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_alarm_in" {
-  count               = "${var.enable_asg_scaling_policy ? 1 : 0}"
+  count               = "${var.enable_asg_classic_mode && var.enable_asg_scaling_policy ? 1 : 0}"
   alarm_name          = "asg-${var.project_name}-${var.env}-cpu_alarm-below-${var.asg_cpu_alarm_scale_in_threshold}"
   comparison_operator = "LessThanOrEqualToThreshold"
   evaluation_periods  = "${var.asg_cpu_alarm_scale_in_evaluation_periods}"
@@ -280,7 +284,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_alarm_in" {
 }
 
 resource "aws_autoscaling_lifecycle_hook" "ecs_lifecycle_termination_hook" {
-  count                  = "${var.enable_lifecycle_termination_toggle? 1: 0}"
+  count                  = "${var.enable_asg_classic_mode && var.enable_lifecycle_termination_toggle? 1: 0}"
 
   name                   = "${aws_autoscaling_group.ecs_asg.name}-lifecycle-termination-hook"
   autoscaling_group_name = "${aws_autoscaling_group.ecs_asg.name}"
@@ -294,6 +298,8 @@ resource "aws_autoscaling_lifecycle_hook" "ecs_lifecycle_termination_hook" {
 # Auto-scaling group via Launch Template
 #------------------------------------------
 resource "aws_launch_template" "ecs_lt" {
+  count = "${var.enable_asg_mixed_mode ? 1 : 0}"
+
   name_prefix   = "${var.project_name}-${var.env}-lt-"
   image_id      = "${data.aws_ami.ecs.id}"
   description   = "Lanuch template for ${var.project_name}-${var.env} at ${timestamp()}"
@@ -328,6 +334,8 @@ resource "aws_launch_template" "ecs_lt" {
 }
 
 resource "aws_autoscaling_group" "ecs_asg_lt" {
+  count = "${var.enable_asg_mixed_mode ? 1 : 0}"
+
   name                 = "${var.project_name}-${var.env}-asg-lt"
 
   mixed_instances_policy {
@@ -402,7 +410,7 @@ resource "aws_autoscaling_group" "ecs_asg_lt" {
 }
 
 resource "aws_autoscaling_policy" "asg_lt_scale_out_cpu_reservation" {
-  count                     = "${var.enable_asg_cpu_reservation_scaling_policy ? 1 : 0}"
+  count                     = "${var.enable_asg_mixed_mode && var.enable_asg_cpu_reservation_scaling_policy ? 1 : 0}"
   name                      = "${var.project_name}-${var.env}-lt-target-tracking-cpu-reserve-${var.autoscale_cpu_reservation_target_value}-scale-out-policy"
   policy_type               = "TargetTrackingScaling"
   autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg_lt.name}"
@@ -425,7 +433,7 @@ resource "aws_autoscaling_policy" "asg_lt_scale_out_cpu_reservation" {
 }
 
 resource "aws_autoscaling_policy" "asg_lt_scale_out_memory_reservation" {
-  count                     = "${var.enable_asg_memory_reservation_scaling_policy ? 1 : 0}"
+  count                     = "${var.enable_asg_mixed_mode && var.enable_asg_memory_reservation_scaling_policy ? 1 : 0}"
   name                      = "${var.project_name}-${var.env}-lt-target-tracking-memory-reserve-${var.autoscale_memory_reservation_target_value}-scale-out-policy"
   policy_type               = "TargetTrackingScaling"
   autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg_lt.name}"
@@ -448,7 +456,7 @@ resource "aws_autoscaling_policy" "asg_lt_scale_out_memory_reservation" {
 }
 
 resource "aws_autoscaling_lifecycle_hook" "ecs_lt_lifecycle_termination_hook" {
-  count                  = "${var.enable_lifecycle_termination_toggle? 1: 0}"
+  count                  = "${var.enable_asg_mixed_mode && var.enable_lifecycle_termination_toggle? 1: 0}"
 
   name                   = "${aws_autoscaling_group.ecs_asg_lt.name}-lifecycle-termination-hook"
   autoscaling_group_name = "${aws_autoscaling_group.ecs_asg_lt.name}"

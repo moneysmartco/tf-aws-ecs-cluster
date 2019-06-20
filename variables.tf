@@ -48,6 +48,11 @@ variable "dd_api_key" {
   default = ""
 }
 ## ASG
+variable "enable_asg_classic_mode" {
+  description = "Create Autoscaling Group with standard purchase options (100% ondemand)"
+  default = true
+}
+
 variable "asg_min_size" {
   default = 1
 }
@@ -128,6 +133,11 @@ variable "ecs_user_data" {
 }
 
 ## Auto Scaling Group in Launch Template
+variable "enable_asg_mixed_mode" {
+  description = "Create Autoscaling Group with multiple purchase options (spot + ondemand)"
+  default = false
+}
+
 variable "lt_ebs_device_name" {
   default = "/dev/xvda"
 }
