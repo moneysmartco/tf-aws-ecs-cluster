@@ -34,6 +34,7 @@ variable "ec2_type" {
   default = "t2.medium"
 }
 variable "iam_instance_profile" {
+  description = "Instance profile name for launch configuration / launch template"
   default = ""
 }
 
@@ -47,6 +48,11 @@ variable "dd_api_key" {
   default = ""
 }
 ## ASG
+variable "enable_asg_classic_mode" {
+  description = "Create Autoscaling Group with standard purchase options (100% ondemand)"
+  default = true
+}
+
 variable "asg_min_size" {
   default = 1
 }
@@ -124,4 +130,37 @@ variable "lifecycle_default_result" {
 
 variable "ecs_user_data" {
   default = ""
+}
+
+## Auto Scaling Group in Launch Template
+variable "enable_asg_mixed_mode" {
+  description = "Create Autoscaling Group with multiple purchase options (spot + ondemand)"
+  default = false
+}
+
+variable "lt_ebs_device_name" {
+  default = "/dev/xvda"
+}
+
+variable "asg_lt_ec2_type_1" {
+  default = "c4.2xlarge"
+}
+
+variable "asg_lt_ec2_type_2" {
+  default = "c5.2xlarge"
+}
+
+variable "asg_lt_on_demand_base_capacity" {
+  description = "Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances."
+  default = 0
+}
+
+variable "asg_lt_on_demand_percentage_above_base_capacity" {
+  description = "Percentage split between on-demand and Spot instances above the base on-demand capacity."
+  default = 100
+}
+
+variable "asg_lt_spot_instance_pools" {
+  description = "Number of Spot pools per availability zone to allocate capacity."
+  default = 2
 }
