@@ -28,8 +28,8 @@ aws ecs start-task --cluster "$${cluster}" --task-definition $${datadog_task} --
 
 
 #run SSM command to retrieve parameters
-
-dd_api_key=$(aws ssm get-parameters --names dd_api_key --with-decryption --query 'Parameters[*].Value' --output text --region $region)
+dd_parameter_api_name="/${env}/datadog/api-key"
+dd_api_key=$(aws ssm get-parameters --names $dd_parameter_api_name --with-decryption --query 'Parameters[*].Value' --output text --region $region)
 
 if [ -n "$dd_api_key" ]; then
     DD_API_KEY="$dd_api_key" bash -c "$(curl -L https://raw.githubusercontent.com/DataDog/dd-agent/master/packaging/datadog-agent/source/install_agent.sh)"
