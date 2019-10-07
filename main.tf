@@ -107,6 +107,8 @@ data "aws_ami" "ecs" {
 }
 
 resource "aws_launch_configuration" "ecs_lc" {
+  count = "${var.enable_asg_classic_mode ? 1 : 0}"
+
   name_prefix   = "${var.project_name}-${var.env}-lc-"
   image_id      = "${data.aws_ami.ecs.id}"
   instance_type = "${var.ec2_type}"
@@ -128,6 +130,8 @@ resource "aws_launch_configuration" "ecs_lc" {
 }
 
 resource "aws_autoscaling_group" "ecs_asg" {
+  count = "${var.enable_asg_classic_mode ? 1 : 0}"
+
   name                 = "${var.project_name}-${var.env}-asg"
   launch_configuration = "${aws_launch_configuration.ecs_lc.name}"
 
@@ -159,7 +163,7 @@ resource "aws_autoscaling_group" "ecs_asg" {
   #    key                 = "Name"
   #    value               = "sg-staging"
   #    propagate_at_launch = true
-  #   }, 
+  #   },
   #   {
   #    key                 = "Environment"
   #    value               = "staging"
@@ -178,7 +182,7 @@ resource "aws_autoscaling_group" "ecs_asg" {
 }
 
 resource "aws_autoscaling_policy" "asg_scale_out" {
-  count                   = "${var.enable_asg_scaling_policy ? 1 : 0}"
+  count                   = "${var.enable_asg_classic_mode && var.enable_asg_scaling_policy ? 1 : 0}"
   name                    = "${var.project_name}-${var.env}-scale_out-policy"
   scaling_adjustment      = 1
   adjustment_type         = "ChangeInCapacity"
@@ -187,9 +191,8 @@ resource "aws_autoscaling_policy" "asg_scale_out" {
 }
 
 resource "aws_autoscaling_policy" "asg_scale_out_cpu_reservation" {
-  count                     = "${var.enable_asg_cpu_reservation_scaling_policy ? 1 : 0}"
+  count                     = "${var.enable_asg_classic_mode && var.enable_asg_cpu_reservation_scaling_policy ? 1 : 0}"
   name                      = "${var.project_name}-${var.env}-target-tracking-cpu-reserve-${var.autoscale_cpu_reservation_target_value}-scale-out-policy"
-  adjustment_type           = "ChangeInCapacity"
   policy_type               = "TargetTrackingScaling"
   autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg.name}"
   estimated_instance_warmup = "${var.estimated_instance_warmup}"
@@ -211,9 +214,8 @@ resource "aws_autoscaling_policy" "asg_scale_out_cpu_reservation" {
 }
 
 resource "aws_autoscaling_policy" "asg_scale_out_memory_reservation" {
-  count                     = "${var.enable_asg_memory_reservation_scaling_policy ? 1 : 0}"
+  count                     = "${var.enable_asg_classic_mode && var.enable_asg_memory_reservation_scaling_policy ? 1 : 0}"
   name                      = "${var.project_name}-${var.env}-target-tracking-memory-reserve-${var.autoscale_memory_reservation_target_value}-scale-out-policy"
-  adjustment_type           = "ChangeInCapacity"
   policy_type               = "TargetTrackingScaling"
   autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg.name}"
   estimated_instance_warmup = "${var.estimated_instance_warmup}"
@@ -235,7 +237,7 @@ resource "aws_autoscaling_policy" "asg_scale_out_memory_reservation" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_alarm_out" {
-  count               = "${var.enable_asg_scaling_policy ? 1 : 0}"
+  count               = "${var.enable_asg_classic_mode && var.enable_asg_scaling_policy ? 1 : 0}"
   alarm_name          = "asg-${var.project_name}-${var.env}-alarm-above-${var.asg_cpu_alarm_scale_out_threshold}"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "${var.asg_cpu_alarm_scale_out_evaluation_periods}"
@@ -254,7 +256,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_alarm_out" {
 }
 
 resource "aws_autoscaling_policy" "asg_scale_in" {
-  count                   = "${var.enable_asg_scaling_policy ? 1 : 0}"
+  count                   = "${var.enable_asg_classic_mode && var.enable_asg_scaling_policy ? 1 : 0}"
   name                    = "${var.project_name}-${var.env}-scale_in-policy"
   scaling_adjustment      = -1
   adjustment_type         = "ChangeInCapacity"
@@ -263,7 +265,7 @@ resource "aws_autoscaling_policy" "asg_scale_in" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_alarm_in" {
-  count               = "${var.enable_asg_scaling_policy ? 1 : 0}"
+  count               = "${var.enable_asg_classic_mode && var.enable_asg_scaling_policy ? 1 : 0}"
   alarm_name          = "asg-${var.project_name}-${var.env}-cpu_alarm-below-${var.asg_cpu_alarm_scale_in_threshold}"
   comparison_operator = "LessThanOrEqualToThreshold"
   evaluation_periods  = "${var.asg_cpu_alarm_scale_in_evaluation_periods}"
@@ -282,10 +284,180 @@ resource "aws_cloudwatch_metric_alarm" "cpu_alarm_in" {
 }
 
 resource "aws_autoscaling_lifecycle_hook" "ecs_lifecycle_termination_hook" {
-  count                  = "${var.enable_lifecycle_termination_toggle? 1: 0}"
+  count                  = "${var.enable_asg_classic_mode && var.enable_lifecycle_termination_toggle? 1: 0}"
 
   name                   = "${aws_autoscaling_group.ecs_asg.name}-lifecycle-termination-hook"
   autoscaling_group_name = "${aws_autoscaling_group.ecs_asg.name}"
+  default_result         = "${var.lifecycle_default_result}"
+  heartbeat_timeout      = "${var.heartbeat_timeout}"
+  lifecycle_transition   = "autoscaling:EC2_INSTANCE_TERMINATING"
+}
+
+
+#------------------------------------------
+# Auto-scaling group via Launch Template
+#------------------------------------------
+resource "aws_launch_template" "ecs_lt" {
+  count = "${var.enable_asg_mixed_mode ? 1 : 0}"
+
+  name_prefix   = "${var.project_name}-${var.env}-lt-"
+  image_id      = "${data.aws_ami.ecs.id}"
+  description   = "Launch template for ${var.project_name}-${var.env} at ${timestamp()}"
+
+  key_name               = "${var.deploy_key_name}"
+  user_data              = "${base64encode(data.template_file.cloud_config.rendered)}"
+  vpc_security_group_ids = ["${aws_security_group.app_sg.id}"]
+
+  iam_instance_profile {
+    name = "${var.iam_instance_profile}"
+  }
+
+  block_device_mappings {
+    device_name = "${var.lt_ebs_device_name}"
+
+    ebs {
+      volume_type = "${var.root_ebs_type}"
+      volume_size = "${var.root_ebs_size}"
+    }
+  }
+
+  # Detailed monitoring
+  monitoring {
+    enabled = true
+  }
+
+  lifecycle {
+    ignore_changes = ["description"]
+
+    create_before_destroy = true
+  }
+}
+
+resource "aws_autoscaling_group" "ecs_asg_lt" {
+  count = "${var.enable_asg_mixed_mode ? 1 : 0}"
+
+  name                 = "${var.project_name}-${var.env}-asg-lt"
+
+  mixed_instances_policy {
+    launch_template {
+      launch_template_specification {
+        launch_template_id = "${aws_launch_template.ecs_lt.id}"
+        version            = "$$Latest"
+      }
+
+      override {
+        instance_type = "${var.asg_lt_ec2_type_1}"
+      }
+
+      override {
+        instance_type = "${var.asg_lt_ec2_type_2}"
+      }
+    }
+
+    instances_distribution {
+      on_demand_base_capacity                  = "${var.asg_lt_on_demand_base_capacity}"
+      on_demand_percentage_above_base_capacity = "${var.asg_lt_on_demand_percentage_above_base_capacity}"
+      spot_instance_pools                      = "${var.asg_lt_spot_instance_pools}"
+    }
+  }
+
+  min_size         = "${var.asg_min_size}"
+  max_size         = "${var.asg_max_size}"
+
+  vpc_zone_identifier = "${split(",", var.private_subnet_ids)}"
+
+  termination_policies = "${var.asg_termination_policy}"
+
+  enabled_metrics = [
+    "GroupMinSize",
+    "GroupMaxSize",
+    "GroupDesiredCapacity",
+    "GroupInServiceInstances",
+    "GroupPendingInstances",
+    "GroupStandbyInstances",
+    "GroupTerminatingInstances",
+    "GroupTotalInstances"
+  ]
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  # example of expected structure for tags in auto scaling group
+  # tags = [
+  #   {
+  #    key                 = "Name"
+  #    value               = "sg-staging"
+  #    propagate_at_launch = true
+  #   },
+  #   {
+  #    key                 = "Environment"
+  #    value               = "staging"
+  #    propagate_at_launch = true
+  #   },
+  #   .
+  #   .
+  #   .
+  #   {
+  #    key                 = "xxxxxx"
+  #    value               = "yyyyyy"
+  #    propagate_at_launch = true
+  #   }
+  # ]
+  tags = ["${data.null_data_source.ecs_asg_tags.*.outputs}"]
+}
+
+resource "aws_autoscaling_policy" "asg_lt_scale_out_cpu_reservation" {
+  count                     = "${var.enable_asg_mixed_mode && var.enable_asg_cpu_reservation_scaling_policy ? 1 : 0}"
+  name                      = "${var.project_name}-${var.env}-lt-target-tracking-cpu-reserve-${var.autoscale_cpu_reservation_target_value}-scale-out-policy"
+  policy_type               = "TargetTrackingScaling"
+  autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg_lt.name}"
+  estimated_instance_warmup = "${var.estimated_instance_warmup}"
+  target_tracking_configuration {
+    customized_metric_specification {
+      metric_dimension {
+        name  = "ClusterName"
+        value = "${aws_ecs_cluster.ecs.name}"
+        }
+
+        metric_name = "CPUReservation"
+        namespace   = "AWS/ECS"
+        statistic   = "Average"
+        unit        = "Percent"
+      }
+
+    target_value = "${var.autoscale_cpu_reservation_target_value}"
+  }
+}
+
+resource "aws_autoscaling_policy" "asg_lt_scale_out_memory_reservation" {
+  count                     = "${var.enable_asg_mixed_mode && var.enable_asg_memory_reservation_scaling_policy ? 1 : 0}"
+  name                      = "${var.project_name}-${var.env}-lt-target-tracking-memory-reserve-${var.autoscale_memory_reservation_target_value}-scale-out-policy"
+  policy_type               = "TargetTrackingScaling"
+  autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg_lt.name}"
+  estimated_instance_warmup = "${var.estimated_instance_warmup}"
+  target_tracking_configuration {
+    customized_metric_specification {
+      metric_dimension {
+        name  = "ClusterName"
+        value = "${aws_ecs_cluster.ecs.name}"
+        }
+
+        metric_name = "MemoryReservation"
+        namespace   = "AWS/ECS"
+        statistic   = "Average"
+        unit        = "Percent"
+      }
+
+    target_value = "${var.autoscale_memory_reservation_target_value}"
+  }
+}
+
+resource "aws_autoscaling_lifecycle_hook" "ecs_lt_lifecycle_termination_hook" {
+  count                  = "${var.enable_asg_mixed_mode && var.enable_lifecycle_termination_toggle? 1: 0}"
+
+  name                   = "${aws_autoscaling_group.ecs_asg_lt.name}-lifecycle-termination-hook"
+  autoscaling_group_name = "${aws_autoscaling_group.ecs_asg_lt.name}"
   default_result         = "${var.lifecycle_default_result}"
   heartbeat_timeout      = "${var.heartbeat_timeout}"
   lifecycle_transition   = "autoscaling:EC2_INSTANCE_TERMINATING"
