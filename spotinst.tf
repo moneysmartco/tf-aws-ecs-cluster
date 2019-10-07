@@ -5,9 +5,9 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
   name         = "${var.project_name}-${var.env}"
   cluster_name = "${var.project_name}-${var.env}"
 
-  min_size         = "0"
-  max_size         = "1000"
-  desired_capacity = "500"
+  min_size         = "${var.spotinst_min_size}"
+  max_size         = "${var.spotinst_max_size}"
+  desired_capacity = "${var.spotinst_desired_capacity}"
 
   subnet_ids = "${split(",", var.private_subnet_ids)}"
   whitelist  = "${split(",", var.spotinst_whitelist)}"
@@ -33,5 +33,16 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
     }
   }
 
-  tags = ["${data.null_data_source.ecs_asg_tags.*.outputs}"]
+  tags = ["${data.null_data_source.spotinst_tags.*.outputs}"]
+
+  # tags = [
+  #   {
+  #     key   = "test"
+  #     value = "by-eric"
+  #   },
+  #   {
+  #     key   = "test-1"
+  #     value = "by-eric"
+  #   },
+  # ]
 }
