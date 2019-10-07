@@ -32,4 +32,6 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
       batch_size_percentage = 100
     }
   }
+
+  tags = ["${data.null_data_source.ecs_asg_tags.*.outputs}"]
 }
