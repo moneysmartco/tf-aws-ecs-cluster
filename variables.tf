@@ -212,8 +212,8 @@ variable "spotinst_min_size" {
   default = 0
 }
 
-variable "spotinst_desired_capacity" {
-  default = 10
+variable "spotinst_draining_timeout" {
+  default = 120
 }
 
 # Tags

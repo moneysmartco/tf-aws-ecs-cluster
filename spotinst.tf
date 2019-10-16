@@ -8,20 +8,21 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
   min_size = "${var.spotinst_min_size}"
   max_size = "${var.spotinst_max_size}"
 
-  # desired_capacity = "${var.spotinst_desired_capacity}"
-
   subnet_ids                  = "${split(",", var.private_subnet_ids)}"
   whitelist                   = "${split(",", var.spotinst_whitelist)}"
   image_id                    = "${data.aws_ssm_parameter.ecs.value}"
+  draining_timeout            = "${var.spotinst_draining_timeout}"
   security_group_ids          = ["${aws_security_group.app_sg.id}"]
   key_pair                    = "${var.deploy_key_name}"
   user_data                   = "${data.template_file.cloud_config.rendered}"
   iam_instance_profile        = "${var.iam_instance_profile}"
-  associate_public_ip_address = false
+  associate_public_ip_address = false                                         # Assuming all running in private subnet
+
   autoscaler {
     is_auto_config = true
     is_enabled     = true
   }
+
   update_policy {
     should_roll = true
 
@@ -29,6 +30,7 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
       batch_size_percentage = 100
     }
   }
+
   tags = [
     {
       key   = "Name"
