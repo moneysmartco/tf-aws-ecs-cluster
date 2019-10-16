@@ -216,10 +216,6 @@ variable "spotinst_draining_timeout" {
   default = 120
 }
 
-variable "spotinst_batch_roll_update_size_percentage" {
-  default = 33
-}
-
 # Tags
 variable "spotinst_tags_name" {
   default = ""
@@ -258,5 +254,5 @@ variable "spotinst_tags_project" {
 }
 
 variable "spotinst_tags_stack" {
-  default = "shop" // Either shop / blog
+  default = "shop"
 }
