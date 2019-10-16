@@ -33,6 +33,7 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
   }
 
   update_policy {
+    # Update the config during instance scaling activities
     should_roll = false
 
     roll_config {
