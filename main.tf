@@ -107,25 +107,17 @@ data "template_file" "cloud_config" {
 #------------------------------
 # Auto-scaling group
 #------------------------------
-# Use latest ECS AMI
-# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/al2ami.html
-data "aws_ami" "ecs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-ecs-hvm-2.0.*"]
-  }
-
-  name_regex = ".*-x86_64-ebs$"
+# Use recommend image ID via SSM Parameter
+# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/retrieve-ecs-optimized_AMI.html
+data "aws_ssm_parameter" "ecs" {
+  name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
 }
 
 resource "aws_launch_configuration" "ecs_lc" {
   count = "${var.enable_asg_classic_mode ? 1 : 0}"
 
   name_prefix   = "${var.project_name}-${var.env}-lc-"
-  image_id      = "${data.aws_ami.ecs.id}"
+  image_id      = "${data.aws_ssm_parameter.ecs.value}"
   instance_type = "${var.ec2_type}"
 
   key_name             = "${var.deploy_key_name}"
@@ -317,7 +309,7 @@ resource "aws_launch_template" "ecs_lt" {
   count = "${var.enable_asg_mixed_mode ? 1 : 0}"
 
   name_prefix = "${var.project_name}-${var.env}-lt-"
-  image_id    = "${data.aws_ami.ecs.id}"
+  image_id    = "${data.aws_ssm_parameter.ecs.value}"
   description = "Launch template for ${var.project_name}-${var.env} at ${timestamp()}"
 
   key_name               = "${var.deploy_key_name}"

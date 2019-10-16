@@ -12,7 +12,7 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
   subnet_ids = "${split(",", var.private_subnet_ids)}"
   whitelist  = "${split(",", var.spotinst_whitelist)}"
 
-  image_id             = "${data.aws_ami.ecs.id}"
+  image_id             = "${data.aws_ssm_parameter.ecs.value}"
   security_group_ids   = ["${aws_security_group.app_sg.id}"]
   key_pair             = "${var.deploy_key_name}"
   user_data            = "${data.template_file.cloud_config.rendered}"
