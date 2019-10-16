@@ -36,7 +36,7 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
     should_roll = true
 
     roll_config {
-      batch_size_percentage = 100
+      batch_size_percentage = 20
     }
   }
 

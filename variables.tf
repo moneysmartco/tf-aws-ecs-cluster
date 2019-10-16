@@ -216,6 +216,10 @@ variable "spotinst_draining_timeout" {
   default = 120
 }
 
+variable "spotinst_batch_roll_update_size_percentage" {
+  default = 33
+}
+
 # Tags
 variable "spotinst_tags_name" {
   default = ""
