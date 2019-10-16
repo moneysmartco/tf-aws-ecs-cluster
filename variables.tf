@@ -209,7 +209,7 @@ variable "spotinst_max_size" {
 }
 
 variable "spotinst_min_size" {
-  default = 0
+  default = 1
 }
 
 variable "spotinst_draining_timeout" {
