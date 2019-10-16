@@ -215,3 +215,44 @@ variable "spotinst_min_size" {
 variable "spotinst_desired_capacity" {
   default = 10
 }
+
+# Tags
+variable "spotinst_tags_name" {
+  default = ""
+}
+
+variable "spotinst_tags_country" {
+  default = "common"
+}
+
+variable "spotinst_tags_environment" {
+  default = ""
+}
+
+variable "spotinst_tags_repository" {
+  default = ""
+}
+
+variable "spotinst_tags_owner" {
+  default = ""
+}
+
+variable "spotinst_tags_department" {
+  default = ""
+}
+
+variable "spotinst_tags_team" {
+  default = "shared"
+}
+
+variable "spotinst_tags_product" {
+  default = "common"
+}
+
+variable "spotinst_tags_project" {
+  default = "common"
+}
+
+variable "spotinst_tags_stack" {
+  default = "shop" // Either shop / blog
+}

@@ -47,16 +47,6 @@ data "null_data_source" "ecs_asg_tags" {
   }
 }
 
-# data structure to transform the tags structure(list of maps) required by auto scaling group resource
-data "null_data_source" "spotinst_tags" {
-  count = "${length(local.ecs_asg_tags)}"
-
-  inputs = {
-    key   = "${element(keys(local.ecs_asg_tags), count.index)}"
-    value = "${element(values(local.ecs_asg_tags), count.index)}"
-  }
-}
-
 #------------------------------
 # SG
 #------------------------------

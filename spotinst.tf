@@ -33,16 +33,73 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
     }
   }
 
-  tags = ["${data.null_data_source.spotinst_tags.*.outputs}"]
+  tags = [
+    {
+      key   = "Name"
+      value = "${var.spotinst_tags_name}"
+    },
+    {
+      key = "Country"
 
-  # tags = [
-  #   {
-  #     key   = "test"
-  #     value = "by-eric"
-  #   },
-  #   {
-  #     key   = "test-1"
-  #     value = "by-eric"
-  #   },
-  # ]
+      // hk in tf-hk
+      // sg in tf-sg
+      // common in tf-api-common (not working...)
+      // common in tf-blog-fe (not working...)
+      value = "${var.spotinst_tags_country}"
+    },
+    {
+      key   = "Environment"
+      value = "${var.spotinst_tags_environment}"
+    },
+    {
+      key = "Repository"
+
+      // tf-blog-fe in tf-blog-fe
+      value = "${var.spotinst_tags_repository}"
+    },
+    {
+      key   = "Owner"
+      value = "${var.spotinst_tags_owner}"
+    },
+    {
+      key   = "Department"
+      value = "${var.spotinst_tags_department}"
+    },
+    {
+      key = "Team"
+
+      // shared in tf-hk
+      // shared in tf-sg
+      // shared in tf-api-common
+      // shared in tf-blog-fe
+      value = "${var.spotinst_tags_team}"
+    },
+    {
+      key = "Product"
+
+      // common in tf-hk
+      // common in tf-sg
+      // common in tf-api-common
+      // v2 in tf-blog-fe
+      value = "${var.spotinst_tags_product}"
+    },
+    {
+      key = "Project"
+
+      // hk in tf-hk
+      // sg in tf-hk
+      // api-common in tf-api-common (not working....)
+      // blog-fe in tf-blog-fe (not working....)
+      value = "${var.spotinst_tags_project}"
+    },
+    {
+      key = "Stack"
+
+      // shop in tf-hk
+      // shop in tf-sg
+      // shop in tf-api-common
+      // blog in tf-blog-fe
+      value = "${var.spotinst_tags_stack}"
+    },
+  ]
 }
