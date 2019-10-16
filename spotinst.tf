@@ -99,5 +99,9 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
       // blog in tf-blog-fe
       value = "${var.spotinst_tags_stack}"
     },
+    {
+      key   = "datadog-enabled"
+      value = "true"
+    },
   ]
 }
