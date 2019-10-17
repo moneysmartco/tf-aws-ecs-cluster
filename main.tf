@@ -1,18 +1,28 @@
 locals {
   # env tag in map structure
-  env_tag = { Environment = "${var.env}" }
+  env_tag = {
+    Environment = "${var.env}"
+  }
 
   # ecs cluster name tag in map structure
-  ecs_cluster_name_tag = { Name = "${var.project_name}-${var.env}" }
+  ecs_cluster_name_tag = {
+    Name = "${var.project_name}-${var.env}"
+  }
 
   # ecs auto scaling group name tag in map structure
-  ecs_asg_name_tag = { Name = "${var.project_name}-${var.env}" }
+  ecs_asg_name_tag = {
+    Name = "${var.project_name}-${var.env}"
+  }
 
   # enable datadog to be used tag in map structure
-  datadog_tag = { datadog-enabled = "true" }
+  datadog_tag = {
+    datadog-enabled = "true"
+  }
 
   # ec2 security group name tag in map structure
-  app_security_group_name_tag = { Name = "${var.project_name}-${var.env}-sg" }
+  app_security_group_name_tag = {
+    Name = "${var.project_name}-${var.env}-sg"
+  }
 
   #------------------------------------------------------------
   # variables that will be mapped to the various resource block
@@ -20,10 +30,8 @@ locals {
 
   # ecs cluster tags
   ecs_cluster_tags = "${merge(var.tags, local.env_tag, local.ecs_cluster_name_tag)}"
-
   # ecs asg tags
   ecs_asg_tags = "${merge(var.tags, local.env_tag, local.ecs_asg_name_tag, local.datadog_tag)}"
-
   # app ec2 security group name tags
   app_security_group_tags = "${merge(var.tags, local.env_tag, local.app_security_group_name_tag)}"
 }
@@ -31,9 +39,10 @@ locals {
 # data structure to transform the tags structure(list of maps) required by auto scaling group resource
 data "null_data_source" "ecs_asg_tags" {
   count = "${length(local.ecs_asg_tags)}"
+
   inputs = {
-    key = "${element(keys(local.ecs_asg_tags), count.index)}"
-    value = "${element(values(local.ecs_asg_tags), count.index)}"
+    key                 = "${element(keys(local.ecs_asg_tags), count.index)}"
+    value               = "${element(values(local.ecs_asg_tags), count.index)}"
     propagate_at_launch = true
   }
 }
@@ -44,20 +53,24 @@ data "null_data_source" "ecs_asg_tags" {
 resource "aws_security_group" "app_sg" {
   name        = "tf-${var.project_name}-${var.env}-sg"
   description = "${var.project_name} ${var.env} secgroup"
-  vpc_id = "${var.vpc_id}"
+  vpc_id      = "${var.vpc_id}"
+
   ingress {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
     security_groups = ["${var.bastion_sg_id}"]
   }
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   tags = "${local.app_security_group_tags}"
+
   lifecycle {
     ignore_changes = ["ingress"]
   }
@@ -94,23 +107,17 @@ data "template_file" "cloud_config" {
 #------------------------------
 # Auto-scaling group
 #------------------------------
-# Use latest ECS AMI
-# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/al2ami.html
-data "aws_ami" "ecs" {
-  most_recent = true
-  owners      = ["amazon"]
-  filter {
-    name    = "name"
-    values  = ["amzn2-ami-ecs-hvm-2.0.*"]
-  }
-  name_regex = ".*-x86_64-ebs$"
+# Use recommend image ID via SSM Parameter
+# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/retrieve-ecs-optimized_AMI.html
+data "aws_ssm_parameter" "ecs" {
+  name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
 }
 
 resource "aws_launch_configuration" "ecs_lc" {
   count = "${var.enable_asg_classic_mode ? 1 : 0}"
 
   name_prefix   = "${var.project_name}-${var.env}-lc-"
-  image_id      = "${data.aws_ami.ecs.id}"
+  image_id      = "${data.aws_ssm_parameter.ecs.value}"
   instance_type = "${var.ec2_type}"
 
   key_name             = "${var.deploy_key_name}"
@@ -135,8 +142,8 @@ resource "aws_autoscaling_group" "ecs_asg" {
   name                 = "${var.project_name}-${var.env}-asg"
   launch_configuration = "${aws_launch_configuration.ecs_lc.name}"
 
-  min_size         = "${var.asg_min_size}"
-  max_size         = "${var.asg_max_size}"
+  min_size = "${var.asg_min_size}"
+  max_size = "${var.asg_max_size}"
 
   vpc_zone_identifier = "${split(",", var.private_subnet_ids)}"
 
@@ -150,7 +157,7 @@ resource "aws_autoscaling_group" "ecs_asg" {
     "GroupPendingInstances",
     "GroupStandbyInstances",
     "GroupTerminatingInstances",
-    "GroupTotalInstances"
+    "GroupTotalInstances",
   ]
 
   lifecycle {
@@ -182,12 +189,12 @@ resource "aws_autoscaling_group" "ecs_asg" {
 }
 
 resource "aws_autoscaling_policy" "asg_scale_out" {
-  count                   = "${var.enable_asg_classic_mode && var.enable_asg_scaling_policy ? 1 : 0}"
-  name                    = "${var.project_name}-${var.env}-scale_out-policy"
-  scaling_adjustment      = 1
-  adjustment_type         = "ChangeInCapacity"
-  cooldown                = "${var.asg_scale_out_cooldown}"
-  autoscaling_group_name  = "${aws_autoscaling_group.ecs_asg.name}"
+  count                  = "${var.enable_asg_classic_mode && var.enable_asg_scaling_policy ? 1 : 0}"
+  name                   = "${var.project_name}-${var.env}-scale_out-policy"
+  scaling_adjustment     = 1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = "${var.asg_scale_out_cooldown}"
+  autoscaling_group_name = "${aws_autoscaling_group.ecs_asg.name}"
 }
 
 resource "aws_autoscaling_policy" "asg_scale_out_cpu_reservation" {
@@ -196,18 +203,19 @@ resource "aws_autoscaling_policy" "asg_scale_out_cpu_reservation" {
   policy_type               = "TargetTrackingScaling"
   autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg.name}"
   estimated_instance_warmup = "${var.estimated_instance_warmup}"
+
   target_tracking_configuration {
     customized_metric_specification {
       metric_dimension {
         name  = "ClusterName"
         value = "${aws_ecs_cluster.ecs.name}"
-        }
-
-        metric_name = "CPUReservation"
-        namespace   = "AWS/ECS"
-        statistic   = "Average"
-        unit        = "Percent"
       }
+
+      metric_name = "CPUReservation"
+      namespace   = "AWS/ECS"
+      statistic   = "Average"
+      unit        = "Percent"
+    }
 
     target_value = "${var.autoscale_cpu_reservation_target_value}"
   }
@@ -219,18 +227,19 @@ resource "aws_autoscaling_policy" "asg_scale_out_memory_reservation" {
   policy_type               = "TargetTrackingScaling"
   autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg.name}"
   estimated_instance_warmup = "${var.estimated_instance_warmup}"
+
   target_tracking_configuration {
     customized_metric_specification {
       metric_dimension {
         name  = "ClusterName"
         value = "${aws_ecs_cluster.ecs.name}"
-        }
-
-        metric_name = "MemoryReservation"
-        namespace   = "AWS/ECS"
-        statistic   = "Average"
-        unit        = "Percent"
       }
+
+      metric_name = "MemoryReservation"
+      namespace   = "AWS/ECS"
+      statistic   = "Average"
+      unit        = "Percent"
+    }
 
     target_value = "${var.autoscale_memory_reservation_target_value}"
   }
@@ -256,12 +265,12 @@ resource "aws_cloudwatch_metric_alarm" "cpu_alarm_out" {
 }
 
 resource "aws_autoscaling_policy" "asg_scale_in" {
-  count                   = "${var.enable_asg_classic_mode && var.enable_asg_scaling_policy ? 1 : 0}"
-  name                    = "${var.project_name}-${var.env}-scale_in-policy"
-  scaling_adjustment      = -1
-  adjustment_type         = "ChangeInCapacity"
-  cooldown                = "${var.asg_scale_in_cooldown}"
-  autoscaling_group_name  = "${aws_autoscaling_group.ecs_asg.name}"
+  count                  = "${var.enable_asg_classic_mode && var.enable_asg_scaling_policy ? 1 : 0}"
+  name                   = "${var.project_name}-${var.env}-scale_in-policy"
+  scaling_adjustment     = -1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = "${var.asg_scale_in_cooldown}"
+  autoscaling_group_name = "${aws_autoscaling_group.ecs_asg.name}"
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_alarm_in" {
@@ -284,7 +293,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_alarm_in" {
 }
 
 resource "aws_autoscaling_lifecycle_hook" "ecs_lifecycle_termination_hook" {
-  count                  = "${var.enable_asg_classic_mode && var.enable_lifecycle_termination_toggle? 1: 0}"
+  count = "${var.enable_asg_classic_mode && var.enable_lifecycle_termination_toggle? 1: 0}"
 
   name                   = "${aws_autoscaling_group.ecs_asg.name}-lifecycle-termination-hook"
   autoscaling_group_name = "${aws_autoscaling_group.ecs_asg.name}"
@@ -293,16 +302,15 @@ resource "aws_autoscaling_lifecycle_hook" "ecs_lifecycle_termination_hook" {
   lifecycle_transition   = "autoscaling:EC2_INSTANCE_TERMINATING"
 }
 
-
 #------------------------------------------
 # Auto-scaling group via Launch Template
 #------------------------------------------
 resource "aws_launch_template" "ecs_lt" {
   count = "${var.enable_asg_mixed_mode ? 1 : 0}"
 
-  name_prefix   = "${var.project_name}-${var.env}-lt-"
-  image_id      = "${data.aws_ami.ecs.id}"
-  description   = "Launch template for ${var.project_name}-${var.env} at ${timestamp()}"
+  name_prefix = "${var.project_name}-${var.env}-lt-"
+  image_id    = "${data.aws_ssm_parameter.ecs.value}"
+  description = "Launch template for ${var.project_name}-${var.env} at ${timestamp()}"
 
   key_name               = "${var.deploy_key_name}"
   user_data              = "${base64encode(data.template_file.cloud_config.rendered)}"
@@ -336,7 +344,7 @@ resource "aws_launch_template" "ecs_lt" {
 resource "aws_autoscaling_group" "ecs_asg_lt" {
   count = "${var.enable_asg_mixed_mode ? 1 : 0}"
 
-  name                 = "${var.project_name}-${var.env}-asg-lt"
+  name = "${var.project_name}-${var.env}-asg-lt"
 
   mixed_instances_policy {
     launch_template {
@@ -361,8 +369,8 @@ resource "aws_autoscaling_group" "ecs_asg_lt" {
     }
   }
 
-  min_size         = "${var.asg_min_size}"
-  max_size         = "${var.asg_max_size}"
+  min_size = "${var.asg_min_size}"
+  max_size = "${var.asg_max_size}"
 
   vpc_zone_identifier = "${split(",", var.private_subnet_ids)}"
 
@@ -376,7 +384,7 @@ resource "aws_autoscaling_group" "ecs_asg_lt" {
     "GroupPendingInstances",
     "GroupStandbyInstances",
     "GroupTerminatingInstances",
-    "GroupTotalInstances"
+    "GroupTotalInstances",
   ]
 
   lifecycle {
@@ -413,18 +421,19 @@ resource "aws_autoscaling_policy" "asg_lt_scale_out_cpu_reservation" {
   policy_type               = "TargetTrackingScaling"
   autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg_lt.name}"
   estimated_instance_warmup = "${var.estimated_instance_warmup}"
+
   target_tracking_configuration {
     customized_metric_specification {
       metric_dimension {
         name  = "ClusterName"
         value = "${aws_ecs_cluster.ecs.name}"
-        }
-
-        metric_name = "CPUReservation"
-        namespace   = "AWS/ECS"
-        statistic   = "Average"
-        unit        = "Percent"
       }
+
+      metric_name = "CPUReservation"
+      namespace   = "AWS/ECS"
+      statistic   = "Average"
+      unit        = "Percent"
+    }
 
     target_value = "${var.autoscale_cpu_reservation_target_value}"
   }
@@ -436,25 +445,26 @@ resource "aws_autoscaling_policy" "asg_lt_scale_out_memory_reservation" {
   policy_type               = "TargetTrackingScaling"
   autoscaling_group_name    = "${aws_autoscaling_group.ecs_asg_lt.name}"
   estimated_instance_warmup = "${var.estimated_instance_warmup}"
+
   target_tracking_configuration {
     customized_metric_specification {
       metric_dimension {
         name  = "ClusterName"
         value = "${aws_ecs_cluster.ecs.name}"
-        }
-
-        metric_name = "MemoryReservation"
-        namespace   = "AWS/ECS"
-        statistic   = "Average"
-        unit        = "Percent"
       }
+
+      metric_name = "MemoryReservation"
+      namespace   = "AWS/ECS"
+      statistic   = "Average"
+      unit        = "Percent"
+    }
 
     target_value = "${var.autoscale_memory_reservation_target_value}"
   }
 }
 
 resource "aws_autoscaling_lifecycle_hook" "ecs_lt_lifecycle_termination_hook" {
-  count                  = "${var.enable_asg_mixed_mode && var.enable_lifecycle_termination_toggle? 1: 0}"
+  count = "${var.enable_asg_mixed_mode && var.enable_lifecycle_termination_toggle? 1: 0}"
 
   name                   = "${aws_autoscaling_group.ecs_asg_lt.name}-lifecycle-termination-hook"
   autoscaling_group_name = "${aws_autoscaling_group.ecs_asg_lt.name}"
