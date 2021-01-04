@@ -26,20 +26,24 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
   iam_instance_profile = "${data.aws_iam_instance_profile.ecs.arn}"
   monitoring           = true                                          # Detailed monitoring
 
-  block_device_mappings {
-    device_name = "/dev/xvda"
-    ebs {
-      delete_on_termination = "true"
-      encrypted = "false"
-      volume_type = "${var.root_ebs_type}"
-      volume_size = "${var.root_ebs_size}"
-      dynamic_volume_size {
-        base_size = "${var.root_ebs_size}"
-        resource = "CPU"
-        size_per_resource_unit = 5
-      }
-    }
-  }
+  root_volume_size     = "${var.root_ebs_size}"
+
+// Todo: Use below setup once we move to terraform 0.12 or above which will update the provider version
+// This provides a much better dynamic disk sizing option based on CPU provisioned
+//  block_device_mappings {
+//    device_name = "/dev/xvda"
+//    ebs {
+//      delete_on_termination = "true"
+//      encrypted = "false"
+//      volume_type = "${var.root_ebs_type}"
+//      volume_size = "${var.root_ebs_size}"
+//      dynamic_volume_size {
+//        base_size = "${var.root_ebs_size}"
+//        resource = "CPU"
+//        size_per_resource_unit = 5
+//      }
+//    }
+//  }
 
   autoscaler {
     is_auto_config = true
