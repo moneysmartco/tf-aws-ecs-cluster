@@ -4,6 +4,7 @@ data "aws_iam_instance_profile" "ecs" {
 
 provider "spotinst" {
   version = "~> 1.32.0"
+  source = 'registry.terraform.io/providers/spotinst/spotinst'
 }
 
 resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
