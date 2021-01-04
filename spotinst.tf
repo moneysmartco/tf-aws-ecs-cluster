@@ -2,6 +2,10 @@ data "aws_iam_instance_profile" "ecs" {
   name = "${var.iam_instance_profile}"
 }
 
+provider "spotinst" {
+  version = "~> 1.32.0"
+}
+
 resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
   count = "${var.spotinst_enable ? 1 : 0}"
 
