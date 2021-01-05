@@ -256,3 +256,4 @@ variable "spotinst_tags_project" {
 variable "spotinst_tags_stack" {
   default = "shop"
 }
+
