@@ -2,6 +2,9 @@ data "aws_iam_instance_profile" "ecs" {
   name = var.iam_instance_profile
 }
 
+provider "spotinst" {
+  version = "~> 1.32.0"
+}
 resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
   count = var.spotinst_enable ? 1 : 0
 
@@ -26,20 +29,20 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
   iam_instance_profile = data.aws_iam_instance_profile.ecs.arn
   monitoring           = true # Detailed monitoring
 
-  //  block_device_mappings {
-  //    device_name = "/dev/xvda"
-  //    ebs {
-  //      delete_on_termination = "true"
-  //      encrypted = "false"
-  //      volume_type = "${var.root_ebs_type}"
-  //      volume_size = "${var.root_ebs_size}"
-  //      dynamic_volume_size {
-  //        base_size = "${var.root_ebs_size}"
-  //        resource = "CPU"
-  //        size_per_resource_unit = 5
-  //      }
-  //    }
-  //  }
+  block_device_mappings {
+    device_name = "/dev/xvda"
+    ebs {
+      delete_on_termination = "true"
+      encrypted = "false"
+      volume_type = "${var.root_ebs_type}"
+      volume_size = "${var.root_ebs_size}"
+      dynamic_volume_size {
+        base_size = "${var.root_ebs_size}"
+        resource = "CPU"
+        size_per_resource_unit = 5
+      }
+    }
+  }
 
   autoscaler {
     is_auto_config = true
