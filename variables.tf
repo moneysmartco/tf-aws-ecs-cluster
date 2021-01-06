@@ -257,3 +257,6 @@ variable "spotinst_tags_stack" {
   default = "shop"
 }
 
+variable "spotinst_variable_disk_per_vcpu" {
+  default = 5
+}
