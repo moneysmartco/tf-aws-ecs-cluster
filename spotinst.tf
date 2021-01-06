@@ -32,7 +32,6 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
       delete_on_termination = "true"
       encrypted = "false"
       volume_type = var.root_ebs_type
-      volume_size = var.root_ebs_size
       dynamic_volume_size {
         base_size = var.root_ebs_size
         resource = "CPU"
