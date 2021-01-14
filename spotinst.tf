@@ -26,6 +26,19 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
   iam_instance_profile = data.aws_iam_instance_profile.ecs.arn
   monitoring           = true # Detailed monitoring
 
+  block_device_mappings {
+    device_name = "/dev/xvda"
+    ebs {
+      delete_on_termination = "true"
+      encrypted = "false"
+      volume_type = var.root_ebs_type
+      dynamic_volume_size {
+        base_size = var.root_ebs_size
+        resource = "CPU"
+        size_per_resource_unit = var.spotinst_variable_disk_per_vcpu
+      }
+    }
+  }
   autoscaler {
     is_auto_config = true
     is_enabled     = true
