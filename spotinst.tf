@@ -42,6 +42,10 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
   autoscaler {
     is_auto_config = true
     is_enabled     = true
+    resource_limits {
+      max_memory_gib = 100000
+      max_vcpu       = 30000
+    }
   }
 
   tags {
