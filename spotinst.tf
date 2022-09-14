@@ -26,6 +26,7 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
   user_data            = data.template_file.cloud_config.rendered
   iam_instance_profile = data.aws_iam_instance_profile.ecs.arn
   monitoring           = true # Detailed monitoring
+  
   block_device_mappings {
     device_name = "/dev/xvda"
     ebs {
