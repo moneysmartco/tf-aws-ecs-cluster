@@ -14,7 +14,7 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
   min_size         = var.spotinst_min_size
   max_size         = var.spotinst_max_size
   draining_timeout = var.spotinst_draining_timeout
-  spot_percentage      = var.spot_percentage
+  spot_percentage  = var.spot_percentage
 
   # Networking
   subnet_ids         = split(",", var.private_subnet_ids)
@@ -26,7 +26,6 @@ resource "spotinst_ocean_ecs" "spotinst_auto_scaling" {
   user_data            = data.template_file.cloud_config.rendered
   iam_instance_profile = data.aws_iam_instance_profile.ecs.arn
   monitoring           = true # Detailed monitoring
-  
   block_device_mappings {
     device_name = "/dev/xvda"
     ebs {
