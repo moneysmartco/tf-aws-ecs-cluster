@@ -260,3 +260,7 @@ variable "spotinst_tags_stack" {
 variable "spotinst_variable_disk_per_vcpu" {
   default = 5
 }
+
+variable "spot_percentage" {
+  default = 100
+}
