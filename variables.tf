@@ -264,3 +264,11 @@ variable "spotinst_variable_disk_per_vcpu" {
 variable "spot_percentage" {
   default = 100
 }
+
+#------------
+# Provider
+#------------
+variable "spotinst_token" {
+}
+variable "spotinst_account" {
+}
